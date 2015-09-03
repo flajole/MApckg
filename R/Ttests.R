@@ -1,0 +1,185 @@
+#' T-test
+#'
+#' Performs group comparison. Creates a file with results: 
+#' either \code{"Wilcoxon_rank.csv"} or \code{"t_test.csv"}
+#' depending on \code{nonpar} argument.
+#'
+#' @note Note, for large data set (> 1000 variables), 
+#' both the paired information and the group variance will be ignored, 
+#' and the default parameters will be used for t-tests to save computational time. 
+#' If you choose non-parametric tests (Wilcoxon rank-sum test), 
+#' the group variance will be ignored.
+#' @param dataSet
+#' @param analSet
+#' @param nonpar If \code{FALSE} - use classical t-test; if \code{TRUE} - Wilcoxon Rank Test
+#' @param thresh Threshold of significance.
+#' @param paired Are values in data set paired or not.
+#' @param var.equal Are variances assumed equal or not.
+#' @return Native \code{analSet} with one added \code{$tt} element consisting of:
+#' \itemize{
+#' \item\code{$tt.nm} - method of analysis 
+#' \item\code{$raw.thresh} - value of \code{thresh} argument
+#' \item\code{$thresh} - \code{-log10(thresh)}
+#' \item\code{$p.value} - p value
+#' \item\code{$p.log} - \code{-log10(p.value)}
+#' \item\code{$inx.imp} - logical vector of features with significant difference
+#' \item\code{$sig.mat} - data frame of significant features
+#' }
+#' @export
+
+
+Ttests.Anal<-function(dataSet, analSet, nonpar=FALSE, thresh=0.05, paired=FALSE, var.equal=TRUE){
+
+        p.value <- GetTtestP(dataSet, paired, var.equal, nonpar);
+        names(p.value)<-colnames(dataSet$norm);
+        p.log <- -log10(p.value);
+        fdr.p <- p.adjust(p.value, "fdr");
+
+        inx.imp <- p.value <= thresh;
+        sig.value <- p.value[inx.imp];
+        fdr.p <-fdr.p[inx.imp];
+
+        ord.inx <- order(sig.value);
+        sig.p <- sig.value[ord.inx];
+        sig.fdr <- fdr.p[ord.inx];
+        lod<- -log10(sig.p);
+        sig.mat <- cbind(sig.p, lod, sig.fdr);
+        sig.mat <- signif(sig.mat, 5);
+        colnames(sig.mat)<-c("p.value", "-log10(p)", "FDR");
+
+        if(nonpar){
+            tt.nm = "Wilcoxon Rank Test";
+            fileName <- "Wilcoxon_rank.csv";
+        }else{
+            tt.nm = "T-Tests";
+            fileName <- "t_test.csv";
+        }
+        write.csv(sig.mat,file=fileName);
+
+        tt<-list (
+            tt.nm = tt.nm,
+            raw.thresh = thresh,
+            p.value = p.value,
+            p.log = p.log,
+            thresh = -log10(thresh), # only used for plot threshold line
+            inx.imp = inx.imp,
+            sig.mat = sig.mat
+        );
+        analSet$tt<-tt;
+		return(analSet);
+}
+
+#' Plot t-test results
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @export
+
+PlotTT<-function(dataSet, analSet, imgName="tt_", format="png", dpi=72, width=NA){
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$tt<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*6/8;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    plot(analSet$tt$p.log, ylab="-log10(p)", xlab=GetVariableLabel(dataSet), main=analSet$tt$tt.nm, pch=19,
+                 col= ifelse(analSet$tt$inx.imp, "magenta", "darkgrey"));
+    abline (h=analSet$tt$thresh, lty=3);
+    axis(4); # added by Beomsoo
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+GetSigTable.TT<-function(analSet){
+    GetSigTable(analSet$tt$sig.mat, "t-tests");
+}
+
+# return a double matrix with 2 columns - p values and lod
+GetTTSigMat<-function(analSet){
+    return(CleanNumber(analSet$tt$sig.mat));
+}
+
+GetTTSigRowNames<-function(analSet){
+    rownames(analSet$tt$sig.mat);
+}
+
+GetTTSigColNames<-function(analSet){
+    colnames(analSet$tt$sig.mat);
+}
+
+GetTtUpMat<-function(analSet){
+    lod <- analSet$tt$p.log;
+    red.inx<- which(analSet$tt$inx.imp);
+    as.matrix(cbind(red.inx, lod[red.inx]));
+}
+
+GetTtDnMat<-function(analSet){
+    lod <- analSet$tt$p.log;
+    blue.inx <- which(!analSet$tt$inx.imp);
+    as.matrix(cbind(blue.inx, lod[blue.inx]));
+}
+GetTtLnMat<-function(analSet){
+    lod <- analSet$tt$p.log;
+    as.matrix(rbind(c(0, analSet$tt$thresh), c(length(lod)+1,analSet$tt$thresh)));
+}
+
+GetTtCmpds<-function(analSet){
+    names(analSet$tt$p.log);
+}
+
+GetMaxTtInx <- function(analSet){
+    which.max(analSet$tt$p.log);
+}
+
+# utility method to get p values
+GetTtestP <- function(dataSet, paired=FALSE, equal.var=TRUE, nonpar=F){
+    if(nonpar){
+         inx1 <- which(dataSet$cls==levels(dataSet$cls)[1]);
+         inx2 <- which(dataSet$cls==levels(dataSet$cls)[2]);
+         p.value <- apply(as.matrix(dataSet$norm), 2, function(x) {
+                tmp <- try(wilcox.test(x[inx1], x[inx2], paired = paired));
+                if(class(tmp) == "try-error") {
+                    return(NA);
+                }else{
+                    return(tmp$p.value);
+                }
+        })
+    }else{
+        if(ncol(dataSet$norm) < 1000){
+            inx1 <- which(dataSet$cls==levels(dataSet$cls)[1]);
+            inx2 <- which(dataSet$cls==levels(dataSet$cls)[2]);
+            p.value <- apply(as.matrix(dataSet$norm), 2, function(x) {
+                tmp <- try(t.test(x[inx1], x[inx2], paired = paired, var.equal = equal.var));
+                if(class(tmp) == "try-error") {
+                    return(NA);
+                }else{
+                    return(tmp$p.value);
+                }
+            })
+        }else{ # use fast version
+            require(genefilter);
+            p.value <- try(rowttests(t(as.matrix(dataSet$norm)), dataSet$cls)$p.value);
+            if(class(p.value) == "try-error") {
+               p.value <- NA;
+            }
+        }
+    }
+    return(p.value);
+}
+
+ContainInfiniteTT<-function(analSet){
+   if(sum(!is.finite(analSet$tt$sig.mat))>0){
+        return("true");
+   }
+    return("false");
+}

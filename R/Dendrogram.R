@@ -1,0 +1,85 @@
+#' Plot dendrogram
+#'
+#' Plot hierarchical clustering tree.
+#' @param dataSet
+#' @param analSet 
+#' @param smplDist The distance measure. One of \code{"euclidean"}, \code{"spearman"}
+#' @param clstDist The agglomeration method to be used, one of "ward.D", "ward.D2", "single", "complete", "average".
+#' For details: \code{\link[stats]{hclust}}
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @export
+
+PlotHCTree <- function(dataSet, analSet, imgName="tree_", format="png", dpi=72, width=NA, smplDist = "euclidean", clstDist = "ward.D"){
+    match.arg(smplDist, c("euclidean", "spearman"))
+	match.arg(clstDist, c("ward.D", "ward.D2", "single", "complete", "average"))
+	# set up data set
+    hc.dat<-as.matrix(dataSet$norm);
+    colnames(hc.dat)<-substr(colnames(hc.dat), 1, 18) # some names are too long
+    # set up distance matrix
+    if(smplDist == 'euclidean'){
+	dist.mat<-dist(hc.dat, method = smplDist);
+    }else{
+	dist.mat<-dist(1-cor(t(hc.dat), method = smplDist));
+    }
+
+    # record the paramters
+    analSet$tree <- list(dist.par=smplDist, clust.par=clstDist);
+    # build the tree
+    hc_tree<-hclust(dist.mat, method=clstDist);
+
+    # plot the tree
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- minH <- 630;
+        myH <- nrow(hc.dat)*10 + 150;
+        if(myH < minH){
+            myH <- minH;
+        }   
+        w <- round(w/72,2);
+        h <- round(myH/72,2);
+    }else if(width == 0){
+        w <- h <- 7.2;
+        imgSet$tree<<-imgName;
+    }else{
+        w <- h <- 7.2;
+    }
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    par(cex=0.8, mar=c(4,2,2,8));
+    if(dataSet$cls.type == "disc"){
+        clusDendro<-as.dendrogram(hc_tree);
+        cols <- GetColorSchema(dataSet);
+        names(cols) <- rownames(hc.dat);
+        labelColors <- cols[hc_tree$order];
+        colLab <- function(n){
+        if(is.leaf(n)) {
+            a <- attributes(n)
+            labCol <- labelColors[a$label];
+            attr(n, "nodePar") <- 
+                if(is.list(a$nodePar)) c(a$nodePar, lab.col = labCol,pch=NA) else
+                               list(lab.col = labCol,pch=NA)
+            }
+            n
+        }
+        clusDendro<-dendrapply(clusDendro, colLab)
+        plot(clusDendro,horiz=T,axes=T);
+        par(cex=1);
+        legend.nm <- as.character(dataSet$cls);
+        legend("topleft", legend = unique(legend.nm), pch=15, col=unique(cols), bty = "n");
+     }else{
+        plot(as.dendrogram(hc_tree), hang=-1, main=paste("Cluster with", clstDist, "method"), xlab=NULL, sub=NULL, horiz=TRUE);
+     }
+     dev.off();
+	 frame()
+	grid::grid.raster(png::readPNG(imgName));
+	 invisible(analSet);
+}
+
+# inx has to be 1 or 2
+GetClassLabel<-function(dataSet, inx){
+    levels(dataSet$cls)[inx]
+}
+

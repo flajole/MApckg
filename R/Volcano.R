@@ -1,0 +1,306 @@
+#' Volcano
+#'
+#' The volcano plot is a combination of fold change and t-tests. 
+#' Note, for unpaired samples, the x-axis is log (FC). 
+#' For paired analysis, the x-axis is number of significant counts. 
+#' Y-axis is -log10(p.value) for both cases.
+#' Writes an output file \code{"volcano.csv"}
+#' @param dataSet
+#' @param analSet
+#' @param fcthresh Fold-change threshold.
+#' @param cmpType Comparison type. If equal \code{0} then group 1 is compared against group 2. Otherwise, vice versa. 
+#' @param percent.thresh Sig. count threshold (for paired data).
+#' @param nonpar If \code{FALSE} - use classical t-test; if \code{TRUE} - Wilcoxon Rank Test
+#' @param thresh Threshold of significance.
+#' @param paired Are values in data set paired or not.
+#' @param var.equal Are variances assumed equal or not.
+#' @return Native \code{analSet} with one added \code{$volcano} element consisting of:
+#' \itemize{
+#' \item\code{$raw.threshx} - value of \code{fcthresh} argument
+#' \item\code{$raw.threshy} - value of \code{thresh} argument
+#' \item\code{$paired} - \code{-log10(thresh)}
+#' \item\code{$max.xthresh} - upper log-threshold of fold change
+#' \item\code{$min.xthresh} - lower log-threshold of fold change
+#' \item\code{$thresh.y} - \code{-log10(thresh)}
+#' \item\code{$fc.all} - fold changes of all features
+#' \item\code{$fc.log} - log of fold changes 
+#' \item\code{$fc.log.uniq} - java-object
+#' \item\code{$inx.up} - logical vector of increasing features
+#' \item\code{$inx.down} - logical vector of decreasing features
+#' \item\code{$p.log} - \code{-log10(p.value)}
+#' \item\code{$inx.p} - logical vector of features with \code{p <= thresh}
+#' \item\code{$sig.mat} - data frame of significant features
+#' }
+#' @export
+
+Volcano.Anal<-function(dataSet, analSet, paired=FALSE, fcthresh = 2, cmpType=0, percent.thresh=0.75, nonpar= FALSE, thresh=0.05, var.equal=TRUE){
+
+        #### t-tests
+        p.value <- GetTtestP(dataSet, paired, var.equal, nonpar);
+        inx.p <- p.value <= thresh;
+        p.log <- -log10(p.value);
+
+        ### fold change analysis
+        # make sure threshold is above 1
+        fcthresh <- ifelse(fcthresh > 1, fcthresh, 1/fcthresh);
+        max.xthresh <- log(fcthresh,2);
+        min.xthresh <- log(1/fcthresh,2);
+
+        if(paired){
+            fc.mat <- GetFC(dataSet, T, cmpType);
+            count.thresh<-round(nrow(dataSet$norm)/2*percent.thresh);
+            mat.up <- fc.mat >= max.xthresh;
+            mat.down <- fc.mat <= min.xthresh;
+
+            count.up<-apply(mat.up, 2, sum);
+            count.down<-apply(mat.down, 2, sum);
+            fc.all<-rbind(count.up, count.down);
+
+            inx.up <- count.up>=count.thresh;
+            inx.down <- count.down>=count.thresh;
+
+            colnames(fc.all)<-colnames(dataSet$norm);
+            rownames(fc.all)<-c("Count (up)", "Count (down)");
+
+            fc.log <- NULL; # dummy, not applicable for counts
+
+            # replace the count.thresh for plot
+            max.xthresh <- count.thresh;
+            min.xthresh <- -count.thresh;
+
+        }else{
+           res <- GetFC(dataSet, F, cmpType);
+
+            # create a named matrix of sig vars for display
+            fc.log <- res$fc.log;
+            fc.all <- res$fc.all;
+
+            inx.up = fc.log > max.xthresh;
+            inx.down = fc.log < min.xthresh;
+        }
+
+        # create named sig table for display
+        inx.imp<-(inx.up | inx.down) & inx.p;
+        if(paired){ 
+            sig.var<-cbind(fc.all[1,][inx.imp,drop=F], fc.all[2,][inx.imp, drop=F], p.value[inx.imp, drop=F], p.log[inx.imp, drop=F]);
+            colnames(sig.var)<-c("Counts (up)","Counts (down)", "p.value", "-log10(p)");
+            # first order by count difference, then by log(p)
+            dif.count<-abs(sig.var[,1]-sig.var[,2]);
+            ord.inx<-order(dif.count, sig.var[,4], decreasing=T);
+            sig.var<-sig.var[ord.inx,,drop=F];
+            sig.var[,c(3,4)]<-signif(sig.var[,c(3,4)],5);
+        }else{
+            sig.var<-cbind(fc.all[inx.imp,drop=F], fc.log[inx.imp,drop=F], p.value[inx.imp,drop=F], p.log[inx.imp,drop=F]);
+            colnames(sig.var)<-c("FC", "log2(FC)", "p.value", "-log10(p)");
+
+            # first order by log(p), then by log(FC)
+            ord.inx<-order(sig.var[,4], abs(sig.var[,2]), decreasing=T);
+            sig.var<-sig.var[ord.inx,,drop=F];
+            sig.var<-signif(sig.var,5);
+        }
+
+        fileName <- "volcano.csv";
+        write.csv(signif(sig.var,5),file=fileName);
+        volcano<-list (
+            raw.threshx = fcthresh,
+            raw.threshy = thresh,
+            paired = paired,
+            max.xthresh = max.xthresh,
+            min.xthresh = min.xthresh,
+            thresh.y = -log10(thresh),
+            fc.all = fc.all,
+            fc.log = fc.log,
+            fc.log.uniq = jitter(fc.log),
+            inx.up = inx.up,
+            inx.down = inx.down,
+            p.log = p.log,
+            inx.p = inx.p,
+            sig.mat = sig.var
+        );
+        analSet$volcano<-volcano;
+		return(analSet);
+}
+
+#' Plot Volcano results
+#'
+#' The volcano plot is a combination of fold change and t-tests. 
+#' Note, for unpaired samples, the x-axis is log (FC). 
+#' For paired analysis, the x-axis is number of significant counts. 
+#' Y-axis is -log10(p.value) for both cases.
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @export
+
+# now try to label the interesting points
+# it is defined by the following rules
+# need to be signficant (sig.inx) and
+# or 2. top 5  p
+# or 2. top 5 left
+# or 3. top 5 right
+PlotVolcano<-function(dataSet, analSet, imgName="volcano_", format="png", dpi=72, width=NA){
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 10;
+    }else if(width == 0){
+        w <- 8;
+        imgSet$volcano<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*6/10;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    par(mar=c(5,5,3,4));
+    vcn<-analSet$volcano;
+    MyGray <- rgb(t(col2rgb("black")), alpha=40, maxColorValue=255);
+    MyHighlight <- rgb(t(col2rgb("magenta")), alpha=80, maxColorValue=255);
+    if(vcn$paired){
+        xlim<-c(-nrow(dataSet$norm)/2, nrow(dataSet$norm)/2)*1.2;
+
+        # merge fc.all two rows into one, bigger one win
+        fc.all <- apply(vcn$fc.all, 2, function(x){ if(x[1] > x[2]){return(x[1])}else{return(-x[2])}})
+
+        hit.inx <- vcn$inx.p & (vcn$inx.up | vcn$inx.down);
+        plot(fc.all, vcn$p.log, xlim=xlim, pch=20, cex=ifelse(hit.inx, 1.2, 0.8),
+                col = ifelse(hit.inx, MyHighlight, MyGray),
+                xlab="Count of Significant Pairs", ylab="-log10(p)");
+
+        sig.upInx <- vcn$inx.p & vcn$inx.up;
+        p.topInx <- GetTopInx(vcn$p.log, 5, T) & vcn$inx.up;
+        fc.rtInx <- GetTopInx(vcn$fc.all[1,], 5, T);
+        lblInx <- p.topInx & sig.upInx & fc.rtInx;
+        if(sum(lblInx, na.rm=T) > 0){
+            text.lbls<-substr(colnames(dataSet$norm)[lblInx],1,14) # some names may be too long
+            text(vcn$fc.all[1,lblInx], vcn$p.log[lblInx],labels=text.lbls, pos=4, col="blue", srt=30, xpd=T, cex=0.8);
+        }
+
+        sig.dnInx <- vcn$inx.p & vcn$inx.down;
+        p.topInx <- GetTopInx(vcn$p.log, 5, T) & vcn$inx.down;
+        fc.leftInx <- GetTopInx(vcn$fc.all[2,], 5, T) & vcn$inx.down;
+        lblInx <-p.topInx & sig.dnInx & fc.leftInx;
+        if(sum(lblInx, na.rm=T) > 0){
+            text.lbls<-substr(colnames(dataSet$norm)[lblInx],1,14) # some names may be too long
+            text(-vcn$fc.all[2,lblInx], vcn$p.log[lblInx],labels=text.lbls, pos=2, col="blue", srt=-30, xpd=T, cex=0.8);
+        }
+
+    }else{
+        imp.inx<-(vcn$inx.up | vcn$inx.down) & vcn$inx.p;
+    	plot(vcn$fc.log, vcn$p.log, pch=20, cex=ifelse(imp.inx, 1.2, 0.7),
+                col = ifelse(imp.inx, MyHighlight, MyGray),
+                xlab="log2 (FC)", ylab="-log10(p)");
+
+        sig.inx <- imp.inx;
+        p.topInx <- GetTopInx(vcn$p.log, 5, T) & (vcn$inx.down);
+        fc.leftInx <- GetTopInx(vcn$fc.log, 5, F);
+        lblInx <-  sig.inx & (p.topInx | fc.leftInx);
+        if(sum(lblInx, na.rm=T) > 0){
+            text.lbls<-substr(colnames(dataSet$norm)[lblInx],1,14) # some names may be too long
+            text(vcn$fc.log[lblInx], vcn$p.log[lblInx],labels=text.lbls, pos=2, col="blue", srt=-30, xpd=T, cex=0.8);
+        }
+
+        p.topInx <- GetTopInx(vcn$p.log, 5, T) & (vcn$inx.up);
+        fc.rtInx <- GetTopInx(vcn$fc.log, 5, T);
+        lblInx <- sig.inx & (p.topInx | fc.rtInx);
+        if(sum(lblInx, na.rm=T) > 0){
+            text.lbls<-substr(colnames(dataSet$norm)[lblInx],1,14) # some names may be too long
+            text(vcn$fc.log[lblInx], vcn$p.log[lblInx],labels=text.lbls, pos=4, col="blue", srt=30, xpd=T, cex=0.8);
+        }
+    }
+
+    abline (v = vcn$max.xthresh, lty=3);
+    abline (v = vcn$min.xthresh, lty=3);
+    abline (h = vcn$thresh.y, lty=3);
+    axis(4); # added by Beomsoo
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+GetVolcanoDnMat<- function(analSet){
+    vcn<-analSet$volcano;
+    imp.inx<-(vcn$inx.up | vcn$inx.down) & vcn$inx.p;
+    blue.inx<- which(!imp.inx);
+
+    # make sure they are not tied
+    xs <- vcn$fc.log.uniq[blue.inx]
+    ys <- vcn$p.log[blue.inx];
+    as.matrix(cbind(xs, ys));
+}
+
+GetVolcanoUpMat<- function(analSet){
+    vcn<-analSet$volcano;
+    imp.inx<-(vcn$inx.up | vcn$inx.down) & vcn$inx.p;
+    red.inx<- which(imp.inx);
+
+    # make sure they are not tied
+    xs <- vcn$fc.log.uniq[red.inx]
+    ys <- vcn$p.log[red.inx];
+
+    as.matrix(cbind(xs, ys));
+}
+
+GetVolcanoVlMat<- function(analSet){
+    vcn<-analSet$volcano;
+    limy <- GetExtendRange(vcn$fc.log);
+    as.matrix(rbind(c(vcn$min.xthresh, limy[1]), c(vcn$min.xthresh,limy[2])));
+}
+
+GetVolcanoVrMat<- function(analSet){
+    vcn<-analSet$volcano;
+    limy <- GetExtendRange(vcn$fc.log);
+    as.matrix(rbind(c(vcn$max.xthresh, limy[1]), c(vcn$max.xthresh,limy[2])));
+}
+
+GetVolcanoHlMat<- function(analSet){
+    vcn<-analSet$volcano;
+    limx <- GetExtendRange(vcn$fc.log);
+    as.matrix(rbind(c(limx[1], vcn$thresh.y), c(limx[2],vcn$thresh.y)));
+}
+
+GetVolcanoRangeX<- function(analSet){
+    range(analSet$volcano$fc.log.uniq);
+}
+
+GetVolcanoCmpds<- function(analSet){
+    names(analSet$volcano$fc.log);
+}
+
+GetVolcanoCmpdInxs<-function(analSet){
+    analSet$volcano$fc.log.uniq
+}
+
+# get indices of top n largest/smallest number
+GetTopInx <- function(vec, n, dec=T){
+    inx <- order(vec, decreasing = dec)[1:n];
+    # convert to T/F vec
+    vec<-rep(F, length=length(vec));
+    vec[inx] <- T;
+    return (vec);
+}
+
+GetSigTable.Volcano<-function(analSet){
+    GetSigTable(analSet$volcano$sig.mat, "volcano plot");
+}
+
+GetVolcanoSigMat<-function(analSet){
+    return(CleanNumber(analSet$volcano$sig.mat));
+}
+
+GetVolcanoSigRowNames<-function(analSet){
+   rownames(analSet$volcano$sig.mat);
+}
+
+GetVolcanoSigColNames<-function(analSet){
+   colnames(analSet$volcano$sig.mat);
+}
+
+ContainInfiniteVolcano<-function(analSet){
+   if(sum(!is.finite(analSet$volcano$sig.mat))>0){
+        return("true");
+   }
+   return("false");
+}

@@ -1,0 +1,307 @@
+#' Support Vector Machine (SVM)
+#'
+#' Perform recursive SVM for feature selection and classification. Uses \code{\link[e1071]{svm}} function.
+#' Writes results to \code{"svm_sigfeatures.csv"} file.
+#' R-SVM uses SVM (with linear kernel) to perform classification recursively
+#' using different feature subsets. Features are selected based on their relative
+#' contribution in the classification using cross validation error rates. 
+#' The least important features are eliminated in the subsequent steps. 
+#' This process creates a series of SVM models (levels). 
+#' The features used by the best model are plotted. 
+#' LOOCV: leave one out cross-validation.
+#' @param dataSet
+#' @param analSet
+#' @param cvType Type of cross-validation of: integer - N-fold-CV is used; 
+#' \code{"LOO"} - leave-one-out CV (LOOCV); \code{"bootstrape"} - bootstrape CV
+#' @return Native \code{analSet} with one added element \code{$svm} containing  
+#' - standard \code{\link[randomForest]{randomForest}} function output
+#' @export
+
+# recursive SVM for feature selection and classification
+RSVM.Anal<-function(dataSet, analSet, cvType=10){
+
+   ladder = CreateLadder(ncol(dataSet$norm));
+   svm.out <- RSVM(dataSet$norm, dataSet$cls, ladder, CVtype=cvType);
+
+   # calculate important features
+   ERInd <- max( which(svm.out$Error == min(svm.out$Error)) )
+   MinLevel <- svm.out$ladder[ERInd]
+   FreqVec <- svm.out$SelFreq[, ERInd]
+   SelInd <- which(rank(FreqVec) >= (svm.out$ladder[1]-MinLevel));
+   FreqInd<-svm.out$SelFreq[SelInd, ERInd]
+   names(FreqInd)<-colnames(dataSet$norm)[SelInd];
+
+   #create a sig table for display
+   sig.var<- rev(sort(FreqInd));
+   sig.var<-as.matrix(sig.var); # 1-column matrix
+   colnames(sig.var)<-"Freqency";
+
+   write.csv(sig.var,file="svm_sigfeatures.csv");
+
+   # add sorted features frequencies as importance indicator
+   svm.out<-append(svm.out, list(sig.mat=sig.var, best.inx=ERInd));
+   analSet$svm<-svm.out;
+   return(analSet);
+}
+
+#' Plot RSVM
+#'
+#' Set of functions for plotting the results of recursive Support Vector Machine analysis.
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @name PlotRSVM
+NULL
+
+#' \code{PlotRSVM.Classification} - plot feature classification.
+#' @rdname PlotRSVM
+
+PlotRSVM.Classification<-function(dataSet, analSet, imgName="svm_cls_", format="png", dpi=72, width=NA){
+    res<-analSet$svm$Error;
+    edge<-(max(res)-min(res))/100; # expand y uplimit for text
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$svm.class<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*6/8;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    plot(res,type='l',xlab='Number of variables (levels)',ylab='Error Rate',
+                ylim = c(min(res)-5*edge, max(res)+18*edge), axes=F,
+                main="Recursive SVM classification")
+    text(res,labels =paste(100*round(res,3),'%'), adj=c(-0.3, -0.5), srt=45, xpd=T)
+
+    points(res, col=ifelse(1:length(res)==analSet$svm$best.inx,"red","blue"));
+    axis(2);
+    axis(1, 1:length(res), names(res));
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotRSVM.VIP} - please note : features are ranked by their frequencies being selected in the best classifiers (only top 15 will be shown)
+#' @rdname PlotRSVM
+
+# if too many, plot top 15
+PlotRSVM.Cmpd<-function(dataSet, analSet, imgName="svm_imp_", format="png", dpi=72, width=NA){
+    sigs<-analSet$svm$sig.mat;
+    data<-sigs[,1];
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$svm<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*7/8;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    PlotImpVar(dataSet, data,"Frequency");
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+GetSigTable.SVM<-function(analSet){
+    GetSigTable(analSet$svm$sig.mat, "Recursive SVM");
+}
+
+# significance measure, double[][]
+GetSVMSigMat<-function(analSet){
+    return(CleanNumber(analSet$svm$sig.mat));
+}
+
+GetSVMSigRowNames<-function(analSet){
+    rownames(analSet$svm$sig.mat);
+}
+
+GetSVMSigColNames<-function(analSet){
+    colnames(analSet$svm$sig.mat);
+}
+
+
+
+### R-code for R-SVM
+### use leave-one-out / Nfold or bootstrape to permute data for external CV
+### build SVM model and use mean-balanced weight to sort genes on training set
+### and recursive elimination of least important genes
+### author: Dr. Xin Lu, Research Scientist
+### Biostatistics Department, Harvard School of Public Health
+
+## create a decreasing ladder for recursive feature elimination
+CreateLadder <- function(Ntotal, Nmin=5 ){
+    x <- vector()
+    x[1] <- Ntotal
+    # note SVM is very computationally intensive, large step first 
+    # first descend with 0.5 -> 50 var left
+    # then descend with 0.6 -> 25 var left
+    # then desend with 0.75 -> 5 var
+
+    for( i in 1:100 ){
+        if(x[i]>200){
+            pRatio = 0.4
+        }else if(x[i]>50){
+            pRatio = 0.5
+        }else if(x[i]>25){
+            pRatio = 0.6
+        }else{
+            pRatio = 0.75
+        }
+        pp <- round(x[i] * pRatio)
+        if( pp == x[i] ){
+            pp <- pp-1
+        }
+        if( pp >= Nmin ) {
+            x[i+1] <- pp
+        } else{
+            break
+        }
+    }
+    x
+}
+
+## R-SVM core code
+## input:
+##    x: row matrix of data
+##    y: class label: 1 / -1 for 2 classes
+##    CVtype:
+##        integer: N fold CV
+##        "LOO":    leave-one-out CV
+##        "bootstrape": bootstrape CV
+##    CVnum:   number of CVs
+##        LOO: defined as sample size
+##        Nfold and bootstrape:  user defined, default as sample size
+## output: a named list
+##    Error: a vector of CV error on each level
+##    SelFreq: a matrix for the frequency of each gene being selected in each level
+##             with each column corresponds to a level of selection
+##             and each row for a gene
+##          The top important gene in each level are those high-freqent ones
+RSVM <- function(x, y, ladder, CVtype, CVnum=0 ){
+    suppressMessages(require(e1071));
+    ## check if y is binary response
+    Ytype <- names(table(y))
+    if( length(Ytype) != 2)
+    {
+        print("ERROR!! RSVM can only deal with 2-class problem")
+        return(0)
+    }
+
+    ## class mean
+    m1 <- apply(x[ which(y==Ytype[1]), ], 2, mean)
+    m2 <- apply(x[ which(y==Ytype[2]), ], 2, mean)
+    md <- m1-m2
+
+    yy <- vector( length=length(y))
+    yy[which(y==Ytype[1])] <- 1
+    yy[which(y==Ytype[2])] <- -1
+    y <- yy
+
+    ## check ladder
+    if( min(diff(ladder)) >= 0 )
+    {
+        print("ERROR!! ladder must be monotonously decreasing")
+        return(0);
+    }
+
+    if( ladder[1] != ncol(x) )
+    {
+        ladder <- c(ncol(x), ladder)
+    }
+
+    nSample <- nrow(x)
+    nGene   <- ncol(x)
+    SampInd <- seq(1, nSample)
+
+    if( CVtype == "LOO" )
+    {
+        CVnum <- nSample
+    } else
+    {
+        if( CVnum == 0 )
+        {
+            CVnum <- nSample
+        }
+    }
+
+    ## vector for test error and number of tests
+    ErrVec <- vector( length=length(ladder))
+    names(ErrVec) <- as.character(ladder);
+    nTests <- 0
+
+    SelFreq <- matrix( 0, nrow=nGene, ncol=length(ladder))
+    colnames(SelFreq) <- paste("Level", ladder);
+
+    ## for each CV
+    for( i in 1:CVnum )
+    {
+        ## split data
+        if( CVtype == "LOO" )
+        {
+            TestInd <- i
+            TrainInd <- SampInd[ -TestInd]
+        } else {
+            if( CVtype == "bootstrape" ) {
+                TrainInd <- sample(SampInd, nSample, replace=T);
+                TestInd <- SampInd[ which(!(SampInd %in% TrainInd ))];
+            } else {
+                ## Nfold
+                TrainInd <- sample(SampInd, nSample*(CVtype-1)/CVtype);
+                TestInd <- SampInd[ which(!(SampInd %in% TrainInd ))];
+            }
+        }
+
+        nTests <- nTests + length(TestInd)
+
+        ## in each level, train a SVM model and record test error
+        xTrain <- x[TrainInd, ]
+        yTrain <- y[TrainInd]
+
+        xTest  <- x[TestInd,]
+        yTest  <- y[TestInd]
+
+        ## index of the genes used in the
+        SelInd <- seq(1, nGene)
+        for( gLevel in 1:length(ladder) )
+        {
+            ## record the genes selected in this ladder
+            SelFreq[SelInd, gLevel] <- SelFreq[SelInd, gLevel] +1
+
+            ## train SVM model and test error
+            ###################################################################################
+            ## note the scale is changed to T or it never returns sometime for unscaled data ###
+            ## note: the classification performance is idenpendent of about scale is T/F  #####
+            ## for "LOO", the test data should be as.data.frame, matrxi will trigger error #####
+            ###################################################################################
+             svmres <- svm(xTrain[, SelInd], yTrain, scale=T, type="C-classification", kernel="linear" )
+             if( CVtype == "LOO" ){
+                 svmpred <- predict(svmres, as.data.frame(xTest[SelInd], nrow=1) )
+             }else{
+                 svmpred <- predict(svmres, xTest[, SelInd] )
+             }
+             ErrVec[gLevel] <- ErrVec[gLevel] + sum(svmpred != yTest )
+
+            ## weight vector
+             W <- t(svmres$coefs*yTrain[svmres$index]) %*% svmres$SV * md[SelInd]
+             rkW <- rank(W)
+
+             if( gLevel < length(ladder) ){
+                SelInd <- SelInd[which(rkW > (ladder[gLevel] - ladder[gLevel+1]))]
+             }
+        }
+    }
+    ret <- list(ladder=ladder, Error=ErrVec/nTests, SelFreq=SelFreq);
+    ret;
+}

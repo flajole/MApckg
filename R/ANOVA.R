@@ -1,0 +1,336 @@
+#' One-way ANOVA
+#'
+#' Performs one-way ANOVA. Creates a file with results: 
+#' either \code{"anova_nonparametric.csv"} or \code{"anova_posthoc.csv"}
+#' depending on \code{nonpar} argument.
+#' @param dataSet
+#' @param analSet
+#' @param nonpar If \code{FALSE} - use classical ANOVA; if \code{TRUE} - Kruskal Wallis Test
+#' @param thresh Threshold of significance.
+#' @param post.hoc Post-hoc statistics: \code{"tukey"} or \code{"fisher"}
+#' @return Native \code{analSet} with one added \code{$aov} element consisting of:
+#' \itemize{
+#' \item\code{$aov.nm} - method of analysis 
+#' \item\code{$raw.thresh} - value of \code{thresh} argument
+#' \item\code{$thresh} - \code{-log10(thresh)}
+#' \item\code{$p.value} - p-values
+#' \item\code{$p.log} - \code{-log10(p.value)}
+#' \item\code{$inx.imp} - logical vector of features with significant difference
+#' \item\code{$post.hoc} - post-hoc statistics, value of \code{post.hoc} argument
+#' \item\code{$sig.mat} - data frame of significant features with corresponding statistics
+#' }
+#' @export
+
+ANOVA.Anal<-function(dataSet, analSet, nonpar= FALSE, thresh=0.05, post.hoc="fisher"){
+	# perform anova and only return p values and MSres (for Fisher's LSD)
+	match.arg(post.hoc, c("fisher", "tukey"))
+aof <- function(x, cls = dataSet$cls) {
+   aov(x ~ cls);
+}
+
+# perform Kruskal Wallis Test
+kwtest <- function(x, cls = dataSet$cls) {
+   kruskal.test(x ~ cls);
+}
+
+FisherLSD<-function(aov.obj, thresh){
+    LSD.test(aov.obj,"cls", alpha=thresh)
+}
+
+# return only the signicant comparison names
+parseTukey <- function(tukey, cut.off){
+	inx <- tukey$cls[,"p adj"] <= cut.off;
+	paste(rownames(tukey$cls)[inx], collapse="; ");
+}
+
+# return only the signicant comparison names
+parseFisher <- function(fisher, cut.off){
+	inx <- fisher[,"pvalue"] <= cut.off;
+	paste(rownames(fisher)[inx], collapse="; ");
+}
+    if(nonpar){
+        aov.nm <- "Kruskal Wallis Test";
+        anova.res<-apply(as.matrix(dataSet$norm), 2, kwtest);
+
+        #extract all p values
+        p.value<-unlist(lapply(anova.res, function(x) {x$p.value}));
+        names(p.value)<-colnames(dataSet$norm);
+        fdr.p <- p.adjust(p.value, "fdr");
+
+        inx.imp <- p.value <= thresh;
+        if(sum(inx.imp) == 0){ # no sig features!
+            cutpt <- round(0.2*length(p.value));
+            cutpt <- ifelse(cutpt>50, 50, cutpt);
+            inx <- which(rank(p.value) == cutpt);
+            thresh <- p.value[inx]; 
+            inx.imp <- p.value <= thresh;
+        }
+        sig.p <- p.value[inx.imp];
+        fdr.p <- fdr.p[inx.imp];
+
+        sig.mat <- data.frame(signif(sig.p,5), signif(-log10(sig.p),5), signif(fdr.p,5), 'NA');
+        rownames(sig.mat) <- names(sig.p);
+        colnames(sig.mat) <- c("p.value", "-log10(p)", "FDR", "Post-Hoc");
+
+        # order the result simultaneously
+        ord.inx <- order(sig.p, decreasing = FALSE);
+        sig.mat <- sig.mat[ord.inx,];
+
+        fileName <- "anova_nonparametric.csv";
+        write.csv(sig.mat,file=fileName);
+
+    }else{
+        aov.nm <- "One-way ANOVA";
+        aov.res<-apply(as.matrix(dataSet$norm), 2, aof);
+        anova.res<-lapply(aov.res, anova);
+
+        #extract all p values
+        p.value<-unlist(lapply(anova.res, function(x) { x["Pr(>F)"][1,]}));
+        names(p.value)<-colnames(dataSet$norm);
+
+        fdr.p <- p.adjust(p.value, "fdr");
+
+        # do post-hoc only for signficant entries
+        inx.imp <- p.value <= thresh;
+        if(sum(inx.imp) == 0){ # no sig features with default thresh
+            # readjust threshold to top 20% or top 50
+            cutpt <- round(0.2*length(p.value));
+            cutpt <- ifelse(cutpt>50, 50, cutpt);
+            inx <- which(rank(p.value) == cutpt);
+            thresh <- p.value[inx]; 
+            inx.imp <- p.value <= thresh;
+        }
+
+        aov.imp <- aov.res[inx.imp];
+        sig.p <- p.value[inx.imp];
+        fdr.p <- fdr.p[inx.imp];
+
+        cmp.res <- NULL;
+        post.nm <- NULL;
+        if(post.hoc=="tukey"){
+            tukey.res<-lapply(aov.imp, TukeyHSD, conf.level=1-thresh);
+            cmp.res <- unlist(lapply(tukey.res, parseTukey, cut.off=thresh));
+            post.nm = "Tukey's HSD";
+        }else{
+            fisher.res<-lapply(aov.imp, FisherLSD, thresh);
+            cmp.res <- unlist(lapply(fisher.res, parseFisher, cut.off=thresh));
+            post.nm = "Fisher's LSD";
+        }
+
+        # create the result dataframe,
+        # note, the last column is string, not double
+
+        sig.mat <- data.frame(signif(sig.p,5), signif(-log10(sig.p),5), signif(fdr.p,5), cmp.res);
+        rownames(sig.mat) <- names(sig.p);
+        colnames(sig.mat) <- c("p.value", "-log10(p)", "FDR", post.nm);
+
+        # order the result simultaneously
+        ord.inx <- order(sig.p, decreasing = FALSE);
+        sig.mat <- sig.mat[ord.inx,];
+
+        fileName <- "anova_posthoc.csv";
+        write.csv(sig.mat,file=fileName);
+     }
+     aov<-list (
+        aov.nm = aov.nm,
+        raw.thresh = thresh,
+        thresh = -log10(thresh), # only used for plot threshold line
+        p.value = p.value,
+        p.log = -log10(p.value),
+        inx.imp = inx.imp,
+        post.hoc = post.hoc,
+        sig.mat = sig.mat
+    );
+	
+    analSet$aov <- aov;
+    return(analSet);
+}
+
+#' Plot one-way ANOVA results
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @export
+PlotANOVA<-function(dataSet, analSet, imgName="aov_", format="png", dpi=72, width=NA){
+    if (is.null(analSet$aov)) stop("Please, conduct ANOVA.Anal first.")
+	lod <- analSet$aov$p.log;
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$anova<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*6/9;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    plot(lod, ylab="-log10(p)", xlab = GetVariableLabel(dataSet), main=analSet$aov$aov.nm, type="n");
+    red.inx<- which(analSet$aov$inx.imp);
+    blue.inx <- which(!analSet$aov$inx.imp);
+    points(red.inx, lod[red.inx], bg="red", cex=1.2, pch=21);
+    points(blue.inx, lod[blue.inx], bg="green", pch=21);
+    abline (h=analSet$aov$thresh, lty=3);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+
+GetAovSigMat<-function(analSet){
+    return(CleanNumber(as.matrix(analSet$aov$sig.mat[, 1:3])));
+}
+
+GetAovSigRowNames<-function(analSet){
+    rownames(analSet$aov$sig.mat);
+}
+
+GetAovSigColNames<-function(analSet){
+    colnames(analSet$aov$sig.mat[, 1:3]);
+}
+
+GetAovPostHocSig<-function(analSet){
+    analSet$aov$sig.mat[,4];
+}
+
+GetSigTable.Anova<-function(analSet){
+    GetSigTable(analSet$aov$sig.mat, "One-way ANOVA and post-hoc analysis");
+}
+
+GetAnovaUpMat<-function(analSet){
+    lod <- analSet$aov$p.log;
+    red.inx<- which(analSet$aov$inx.imp);
+    as.matrix(cbind(red.inx, lod[red.inx]));
+}
+
+GetAnovaDnMat<-function(analSet){
+    lod <- analSet$aov$p.log;
+    blue.inx <- which(!analSet$aov$inx.imp);
+    as.matrix(cbind(blue.inx, lod[blue.inx]));
+}
+GetAnovaLnMat<-function(analSet){
+    lod <- analSet$aov$p.log;
+    as.matrix(rbind(c(0, analSet$aov$thresh), c(length(lod)+1,analSet$aov$thresh)));
+}
+
+GetAnovaCmpds<-function(analSet){
+    names(analSet$aov$p.log);
+}
+
+GetMaxAnovaInx <- function(analSet){
+    which.max(analSet$aov$p.log);
+}
+
+
+#######################################################
+## calculate Fisher's Least Significant Difference (LSD)
+## adapted from the 'agricolae' package
+##############################################
+LSD.test <- function (y, trt, alpha = 0.05){
+    clase<-c("aov","lm")
+    name.y <- paste(deparse(substitute(y)))
+    name.t <- paste(deparse(substitute(trt)))
+    if("aov"%in%class(y) | "lm"%in%class(y)){
+        A<-y$model
+        DFerror<-df.residual(y)
+        MSerror<-deviance(y)/DFerror
+        y<-A[,1]
+        ipch<-pmatch(trt,names(A))
+        name.t <-names(A)[ipch]
+        trt<-A[,ipch]
+        name.y <- names(A)[1]
+    }
+    junto <- subset(data.frame(y, trt), is.na(y) == FALSE)
+    means <- tapply.stat(junto[, 1], junto[, 2], stat="mean") #change
+    sds <- tapply.stat(junto[, 1], junto[, 2], stat="sd")     #change
+    nn <- tapply.stat(junto[, 1], junto[, 2], stat="length")  #change
+    std.err <- sds[, 2]/sqrt(nn[, 2])
+    Tprob <- qt(1 - alpha/2, DFerror)
+    LCL <- means[,2]-Tprob*std.err
+    UCL <- means[,2]+Tprob*std.err
+    means <- data.frame(means, std.err, replication = nn[, 2], LCL, UCL)
+    names(means)[1:2] <- c(name.t, name.y)
+    #row.names(means) <- means[, 1]
+    ntr <- nrow(means)
+    nk <- choose(ntr, 2)
+    nr <- unique(nn[, 2])
+
+    comb <- combn(ntr, 2)
+    nn <- ncol(comb)
+    dif <- rep(0, nn)
+    LCL1<-dif
+	UCL1<-dif
+    sig<-NULL
+    pvalue <- rep(0, nn)
+    for (k in 1:nn) {
+        i <- comb[1, k]
+        j <- comb[2, k]
+        if (means[i, 2] < means[j, 2]){
+            comb[1, k]<-j
+            comb[2, k]<-i
+        }
+        dif[k] <- abs(means[i, 2] - means[j, 2])
+        sdtdif <- sqrt(MSerror * (1/means[i, 4] + 1/means[j,4]))
+        pvalue[k] <- 2 * (1 - pt(dif[k]/sdtdif, DFerror));
+        pvalue[k] <- round(pvalue[k],6);
+        LCL1[k] <- dif[k] - Tprob*sdtdif
+		UCL1[k] <- dif[k] + Tprob*sdtdif
+        sig[k]<-" "
+        if (pvalue[k] <= 0.001) sig[k]<-"***"
+        else  if (pvalue[k] <= 0.01) sig[k]<-"**"
+        else  if (pvalue[k] <= 0.05) sig[k]<-"*"
+        else  if (pvalue[k] <= 0.1) sig[k]<-"."
+    }
+    tr.i <- means[comb[1, ],1]
+    tr.j <- means[comb[2, ],1]
+    output<-data.frame("Difference" = dif, pvalue = pvalue,sig,LCL=LCL1,UCL=UCL1)
+    rownames(output)<-paste(tr.i,tr.j,sep=" - ");
+	output;
+}
+
+tapply.stat <-function (y, x, stat = "mean"){
+    cx<-deparse(substitute(x))
+    cy<-deparse(substitute(y))
+    x<-data.frame(c1=1,x)
+    y<-data.frame(v1=1,y)
+    nx<-ncol(x)
+    ny<-ncol(y)
+    namex <- names(x)
+    namey <- names(y)
+    if (nx==2) namex <- c("c1",cx)
+    if (ny==2) namey <- c("v1",cy)
+    namexy <- c(namex,namey)
+    for(i in 1:nx) {
+        x[,i]<-as.character(x[,i])
+    }
+    z<-NULL
+    for(i in 1:nx) {
+        z<-paste(z,x[,i],sep="&")
+    }
+    w<-NULL
+    for(i in 1:ny) {
+        m <-tapply(y[,i],z,stat)
+        m<-as.matrix(m)
+        w<-cbind(w,m)
+    }
+    nw<-nrow(w)
+    c<-rownames(w)
+    v<-rep("",nw*nx)
+    dim(v)<-c(nw,nx)
+    for(i in 1:nw) {
+        for(j in 1:nx) {
+            v[i,j]<-strsplit(c[i],"&")[[1]][j+1]
+        }
+    }
+    rownames(w)<-NULL
+    junto<-data.frame(v[,-1],w)
+    junto<-junto[,-nx]
+    names(junto)<-namexy[c(-1,-(nx+1))]
+    return(junto)
+}

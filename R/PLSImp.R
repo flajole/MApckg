@@ -1,0 +1,152 @@
+#' Plot PLS important features
+#'
+#' There are two importance measures in PLS-DA :
+#' one is variable importance in projection (VIP)
+#' and the other is weighted sum of absolute regression coefficients (coef.).
+#' The colored boxes on the right indicate the relative concentrations 
+#' of the corresponding metabolite in each group under study.
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @param type Importance measure. \code{"vip"} - for variable importance in projection (VIP); \code{"coef"} - for weighted sum of absolute regression coefficients.
+#' @param feat.nm ??????????????????????????????????????
+#' @param feat.num The number of top features to plot.
+#' @param color.BW If \code{TRUE}, grey scale is used.
+
+# BHan: added bgcolor parameter for B/W color
+PlotPLS.Imp<-function(dataSet, analSet, imgName="pls_imp_", format="png", dpi=72, width=NA, type="vip", feat.nm, feat.num=15, color.BW=FALSE){
+	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal and PLSDA.CV first.")
+	if (is.null(analSet$plsda)) stop("Please, conduct PLSDA.CV first.")
+    match.arg(type, c("vip","coef"))
+	imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$pls.imp<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    if(type=="vip"){
+        analSet$plsda$imp.type<-"vip";
+        vips<-analSet$plsda$vip.mat[,feat.nm];
+        PlotImpVar(dataSet, vips, "VIP scores", feat.num, color.BW);
+    }else{
+        analSet$plsda$imp.type<-"coef";
+        data<-analSet$plsda$coef.mat[,feat.nm];
+        PlotImpVar(dataSet, data, "Coefficients", feat.num, color.BW);
+    }
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+# BHan: added bgcolor parameter for B/W color
+PlotImpVar <- function(dataSet, imp.vec, xlbl, feat.num=15, color.BW=FALSE){
+    cls.len <- length(levels(dataSet$cls));
+    if(cls.len == 2){
+        rt.mrg <- 5;
+    }else if(cls.len == 3){
+        rt.mrg <- 6;
+    }else if(cls.len == 4){
+        rt.mrg <- 7;
+    }else if(cls.len == 5){
+        rt.mrg <- 8;
+    }else if(cls.len == 6){
+        rt.mrg <- 9;
+    }else{
+        rt.mrg <- 11;
+    }
+    op <- par(mar=c(5,7,3,rt.mrg)); # set right side margin with the number of class
+
+    if(feat.num <= 0){
+        feat.num = 15;
+    }
+
+    if(feat.num > length(imp.vec)){
+        feat.num <- length(imp.vec);
+    }
+
+    # first get the top subset
+    imp.vec <- rev(sort(imp.vec))[1:feat.num];
+
+    # reverser the order for display
+    imp.vec <- sort(imp.vec);
+    
+    # as data should already be normalized, use mean/median should be the same
+    # mns is a list contains means of all vars at each level
+    # conver the list into a matrix with each row contains var averages across different lvls
+    mns <- by(dataSet$norm[, names(imp.vec)], dataSet$cls, 
+                    function(x){ # inner function note, by send a subset of dataframe
+                        apply(x, 2, mean, trim=0.1)
+                    });
+    mns <- t(matrix(unlist(mns), ncol=feat.num, byrow=TRUE));
+
+    # vip.nms <-substr(names(imp.vec), 1, 12);
+    vip.nms <-substr(names(imp.vec), 1, 14);
+    names(imp.vec) <- NULL;
+
+    # modified for B/W color
+    dotcolor <- ifelse(color.BW, "darkgrey", "blue");
+    dotchart(imp.vec, bg=dotcolor, xlab= xlbl, cex=1.3);
+    
+    mtext(vip.nms, side=2, at=1:feat.num, las=2, line=1)
+
+    axis.lims <- par("usr"); # x1, x2, y1 ,y2
+
+    # get character width
+    shift <- 2*par("cxy")[1];
+    lgd.x <- axis.lims[2] + shift;
+
+    x <- rep(lgd.x, feat.num);
+    y <- 1:feat.num;
+    par(xpd=T);
+    suppressMessages(require(RColorBrewer));
+
+    nc <- ncol(mns);
+
+    # modified for B/W color
+    colorpalette <- ifelse(color.BW, "Greys", "RdYlGn");
+    col <- colorRampPalette(brewer.pal(10, colorpalette))(nc); # set colors for each class
+    if(color.BW) col <- rev(col);
+
+    # calculate background
+    bg <- matrix("", nrow(mns), nc);
+    for (m in 1:nrow(mns)){
+        bg[m,] <- (col[nc:1])[rank(mns[m,])];
+    }
+
+    cls.lbl <- levels(dataSet$cls);
+
+    for (n in 1:ncol(mns)){
+        points(x,y, bty="n", pch=22, bg=bg[,n], cex=3);
+        # now add label
+        text(x[1], axis.lims[4], cls.lbl[n], srt=45, adj=c(0.2,0.5));
+        # shift x, note, this is good for current size
+        x <- x + shift/1.25;
+    }
+
+    # now add color key, padding with more intermediate colors for contiuous band
+    col <- colorRampPalette(brewer.pal(25, colorpalette))(50)
+    if(color.BW) col <- rev(col);
+
+    nc <- length(col);
+    x <- rep(x[1] + shift, nc);
+
+    shifty <- (axis.lims[4]-axis.lims[3])/3;
+    starty <- axis.lims[3] + shifty;
+    endy <- axis.lims[3] + 2*shifty;
+    y <- seq(from = starty, to = endy, length = nc);
+
+    points(x,y, bty="n", pch=15, col=rev(col), cex=2);
+
+    text(x[1], endy+shifty/8, "High");
+    text(x[1], starty-shifty/8, "Low");
+
+    par(op);
+}

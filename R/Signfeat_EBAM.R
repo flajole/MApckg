@@ -1,0 +1,159 @@
+#' EBAM Fudge Factor
+#'
+#' \code{EBAM.A0.Anal} - finds EBAM Fudge Factor. Uses \code{\link[siggenes]{find.a0}} function.
+#'
+#' @param dataSet
+#' @param analSet
+#' @param paired Are values in data set paired or not.
+#' @param var.equal Are variances assumed equal or not.
+#' @return Native \code{analSet} with one added \code{$ebam.a0} element containing 
+#' standard \code{\link[siggenes]{find.a0}} function output
+#' @describeIn EBAM.Cmpd.Anal
+#' @export
+
+# deteriming a0, only applicable for z.ebam (default)
+EBAM.A0.Anal<-function(dataSet, analSet, paired=FALSE, var.equal=TRUE){
+    suppressMessages(require(siggenes));
+    if(paired){
+        cl.ebam<-as.numeric(dataSet$pairs); 
+    }else{
+        cl.ebam<-as.numeric(dataSet$cls)-1; # change to 0 and 1 for class label
+    }
+    conc.ebam<-t(dataSet$norm); # in sam column is sample, row is gene
+    ebam_a0<-find.a0(conc.ebam, cl.ebam, var.equal=var.equal, gene.names = names(dataSet$norm), rand=123);
+	analSet$ebam.a0<-ebam_a0;
+	return(analSet);
+}
+
+#' EBAM analysis
+#'
+#' \code{EBAM.Cmpd.Anal} - performs Empirical Bayesian Analysis of Microarray (and Metabolites).
+#' Uses \code{\link[siggenes]{ebam}} function.
+#'
+#' @param dataSet
+#' @param analSet
+#' @param method A character string or name specifying the method or function
+#' that should be used in the computation of the expression score z.
+#' If \code{"z.ebam"}, a modified t- or F-statistic, respectively, will be computed as proposed by Efron et al. (2001).
+#' If \code{"wilc.ebam"}, a (standardized) Wilcoxon sum / signed rank statistic will be used as expression score.
+#' Note: if method is \code{"wilc.ebam"}, then \code{A0} and \code{var.equal} parameters will be ignored
+#' @param A0 Fudge Factor. \code{\link{EBAM.A0.Anal}}
+#' @param paired Are values in data set paired or not.
+#' @param var.equal Are variances assumed equal or not.
+#' @return Native \code{analSet} with one added \code{$ebam} element containing 
+#' standard \code{\link[siggenes]{ebam}} function output
+#' @export
+# note: if method is wilcoxon, the A0 and var equal will be ignored
+EBAM.Cmpd.Anal<-function(dataSet, analSet, method="z.ebam", A0=0, paired=FALSE, var.equal=TRUE){
+    match.arg(method, c("z.ebam", "wilc.ebam"))
+	if(paired){
+        cl.ebam<-as.numeric(dataSet$pairs);
+    }else{
+        cl.ebam<-as.numeric(dataSet$cls)-1;
+    }
+    conc.ebam<-t(dataSet$norm); # in sam column is sample, row is feature
+    if(method=="z.ebam"){
+        ebam_out<-ebam(conc.ebam, cl.ebam, method=z.ebam, a0=A0, var.equal=var.equal, fast=TRUE, gene.names = names(dataSet$norm), rand=123);
+    }else{
+        ebam_out<-ebam(conc.ebam, cl.ebam, method=wilc.ebam, gene.names = names(dataSet$norm), rand=123);
+    }
+    analSet$ebam<-ebam_out;
+	return(analSet);
+}
+
+#' EBAM matrix of significance
+#'
+#' EBAM matrix of significance. Writes results to \code{"ebam_sigfeatures.csv"} file.
+#'
+#' @param analSet
+#' @param delta The delta to control FDR
+#' @return Native \code{analSet} with two added elements:
+#' \itemize{
+#' \item\code{$ebam.cmpd} - matrix containing \code{z.value}, \code{posterior}, \code{local.fdr} columns
+#' \item\code{$ebam.delta} - value of \code{delta} argument
+#' }
+#' @export
+# return double matrix with 3 columns - z.value, posterior, local.fdr
+SetEBAMSigMat<-function(analSet, delta=0.9){
+    ebam.sum<-summary(analSet$ebam, delta);
+    summary.mat<-ebam.sum@mat.sig;
+    sig.mat <-as.matrix(signif(summary.mat[,-1],5));
+    write.csv(signif(sig.mat,5),file="ebam_sigfeatures.csv");
+    analSet$ebam.cmpds<-sig.mat;
+    analSet$ebam.delta<-delta;
+	return(analSet);
+}
+
+
+#' Plot EBAM
+#'
+#' Functions for plotting the results of EBAM.
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @name PlotSAM
+NULL
+
+#' \code{PlotEBAM.A0} - plot EBAM A0 plot.
+#' @rdname PlotEBAM
+#' @export
+# plot ebam a0 plot also return the analSet$ebam.a0 object so that the suggested a0 can be obtained
+PlotEBAM.A0<-function(dataSet, analSet, imgName="ebam_view_", format="png", dpi=72, width=NA){
+    if (is.null(analSet$ebam.a0)) stop("Please, conduct EBAM.A0.Anal first.")
+	imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7; 
+        imgSet$ebam.a0<<-imgName;
+    }
+    h <- 3*w/4;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+	plot(analSet$ebam.a0);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotEDAM.Cmpd} - plot significant features.
+#' @rdname PlotEBAM
+#' @export
+# plot ebam
+PlotEBAM.Cmpd<-function(dataSet, analSet, imgName="ebam_imp_", format="png", dpi=72, width=NA){
+	if (is.null(analSet$ebam)) stop("Please, conduct EBAM.Cmpd.Anal and SetEBAMSigMat first.")
+	if (is.null(analSet$ebam.cmpds)) stop("Please, conduct SetEBAMSigMat first.")
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- h <- 7;
+    }else if(width == 0){
+        w <- h <- 7;
+        imgSet$ebam.cmpd<<-imgName;
+    }else{
+        w <- h <- width;
+    }
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+	plot(analSet$ebam, analSet$ebam.delta);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+GetEBAMSigMat<-function(analSet){
+    return(CleanNumber(analSet$ebam.cmpds));
+}
+
+GetEBAMSigRowNames<-function(analSet){
+    rownames(analSet$ebam.cmpds);
+}
+
+GetEBAMSigColNames<-function(analSet){
+    colnames(analSet$ebam.cmpds);
+}
+
+GetSigTable.EBAM<-function(analSet){
+    GetSigTable(analSet$ebam.cmpds, "EBAM");
+}

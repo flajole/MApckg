@@ -1,0 +1,4 @@
+Package: MApckg
+Version: 0.1
+Suggests: knitr
+VignetteBuilder: knitr

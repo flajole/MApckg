@@ -1,0 +1,334 @@
+#' PLS analysis
+
+#' Uses \code{\link[pls]{'oscorespls'}} method of \code{\link[pls]{plsr}} function . 
+#' Writes two output files: \code{"pls_score.csv"} and \code{"pls_loadings.csv"}.
+#' Adds \code{analSet$pls} element with \code{\link[pls]{plsr}} function output.
+#' @param dataSet
+#' @param analSet
+#' @return Native \code{analSet} with one added \code{$plsr} element containing \code{\link[pls]{plsr}} function output
+#' @export
+# pls analysis using oscorespls so that VIP can be calculated
+# note: the VIP is calculated only after PLSDA-CV is performed
+# to determine the best # of comp. used for VIP
+PLS.Anal<-function(dataSet, analSet){
+    suppressMessages(require('pls'));
+    cls<-as.numeric(dataSet$cls)-1;
+    datmat<-as.matrix(dataSet$norm);
+    analSet$plsr<-plsr(cls~datmat,method='oscorespls');
+    write.csv(signif(analSet$plsr$scores,5), row.names=rownames(dataSet$norm), file="plsda_score.csv");
+    write.csv(signif(analSet$plsr$loadings,5), file="plsda_loadings.csv");
+	return(analSet);
+}
+
+#' PLS loadings
+#'
+#' PLS loadings.
+#' Adds loading matrix to \code{analSet$pls} element.
+#'
+#' @param analSet
+#' @param inx1,inx2 The numbers of PC.
+#' @return Native \code{analSet} with two added elements:
+#' \itemize{
+#' \item\code{$pls$load.x.uniq} - ???
+#' \item\code{$pls$imp.loads} - loading matrix
+#' }
+#' @export
+PLS.Loadings<-function(dataSet, analSet, imgName, format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, plotType, lbl.feat=1){	
+	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal first.")
+	# named vector
+    load1<-analSet$plsr$loadings[,inx1];
+    load2<-analSet$plsr$loadings[,inx2];
+    loadings = signif(as.matrix(cbind(load1, load2)),5);
+
+    ldName1<-paste("Loadings", inx1);
+    ldName2<-paste("Loadings", inx2);
+    colnames(loadings)<-c(ldName1, ldName2);
+    load.x.uniq <- jitter(loadings[,1]);
+    names(load.x.uniq) <- rownames(loadings);
+    analSet$plsr$load.x.uniq <- load.x.uniq;
+    analSet$plsr$imp.loads<-loadings; # set up loading matrix
+	return(analSet);
+}	
+
+
+#' Plot PLS
+#'
+#' Set of functions for plotting the results of PLS.
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @name PlotPLS
+NULL
+
+#' \code{PlotPLSPairSummary} - plot summary.
+#' @param pc.num The number of plotted principal components.
+#' @rdname PlotPLS
+# plot pairwise summary
+PlotPLSPairSummary<-function(dataSet, analSet, imgName="pls_pair_", format="png", dpi=72, width=NA, pc.num=2){
+    if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal first.")
+	imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$pls.pair <<- imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+	pclabels <- paste("Component", 1:pc.num, "\n", round(100*analSet$plsr$Xvar[1:pc.num]/analSet$plsr$Xtotvar,1), "%");
+	# pairs(analSet$plsr$scores[,1:pc.num], col=as.numeric(dataSet$cls)+1, pch=as.numeric(dataSet$cls)+1, labels=pclabels)
+    pairs(analSet$plsr$scores[,1:pc.num], col=GetColorSchema(dataSet), pch=as.numeric(dataSet$cls)+1, labels=pclabels)
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+#' \code{PlotPLS2DScore} - plot 2D score plot.
+#' @param inx1,inx2 The order numbers of PCs.
+#' @param reg Set the confidence level for plotting confidence region ellipse.
+#' @param show If \code{TRUE} then points at the plot are labeled.
+#' @param grey.scale If \code{TRUE} then plot is colored in 50 shades of gray.
+#' @rdname PlotPLS
+#' @export
+# score plot
+PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, reg=0.95, show= TRUE, grey.scale=F){
+    suppressMessages(require('ellipse'));
+	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal first.")
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$pls.score2d<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+	par(mar=c(5,5,3,3));
+    lv1 <- analSet$plsr$scores[,inx1];
+    lv2 <- analSet$plsr$scores[,inx2];
+	xlabel <- paste("Component", inx1, "(", round(100*analSet$plsr$Xvar[inx1]/analSet$plsr$Xtotvar,1), "%)");
+	ylabel <- paste("Component", inx2, "(", round(100*analSet$plsr$Xvar[inx2]/analSet$plsr$Xtotvar,1), "%)");
+
+    text.lbls<-substr(rownames(dataSet$norm),1,12) # some names may be too long
+
+    # obtain ellipse points to the scatter plot for each category
+    lvs <- levels(dataSet$cls);
+    pts.array <- array(0, dim=c(100,2,length(lvs)));
+    for(i in 1:length(lvs)){
+            inx <-dataSet$cls == lvs[i];
+            groupVar<-var(cbind(lv1[inx],lv2[inx]), na.rm=T);
+            groupMean<-cbind(mean(lv1[inx], na.rm=T),mean(lv2[inx], na.rm=T));
+            pts.array[,,i] <- ellipse(groupVar, centre = groupMean, level = reg, npoints=100);
+     }
+
+     xrg <- range (lv1, pts.array[,1,]);
+     yrg <- range (lv2, pts.array[,2,]);
+     x.ext<-(xrg[2]-xrg[1])/12;
+     y.ext<-(yrg[2]-yrg[1])/12;
+     xlims<-c(xrg[1]-x.ext, xrg[2]+x.ext);
+     ylims<-c(yrg[1]-y.ext, yrg[2]+y.ext);
+
+     ## cols = as.numeric(dataSet$cls)+1;
+     cols <- GetColorSchema(dataSet, grey.scale);
+     uniq.cols <- unique(cols);
+
+     plot(lv1, lv2, xlab=xlabel, xlim=xlims, ylim=ylims, ylab=ylabel, type='n', main="Scores Plot");
+     grid(col = "lightgray", lty = "dotted", lwd = 1);
+
+     # make sure name and number of the same order DO NOT USE levels, which may be different
+     legend.nm <- unique(as.character(dataSet$cls));
+     ## uniq.cols <- unique(cols);
+
+     ## BHAN: when same color is choosen for black/white; it makes an error
+     # names(uniq.cols) <- legend.nm;
+     if ( length(uniq.cols) > 1 ) {
+         names(uniq.cols) <- legend.nm;
+     }
+     # draw ellipse
+     for(i in 1:length(lvs)){
+        if ( length(uniq.cols) > 1) {
+            polygon(pts.array[,,i], col=adjustcolor(uniq.cols[lvs[i]], alpha=0.25), border=NA);
+        } else {
+            polygon(pts.array[,,i], col=adjustcolor(uniq.cols, alpha=0.25), border=NA);
+        }
+        if(grey.scale) {
+            lines(pts.array[,,i], col=adjustcolor("black", alpha=0.5), lty=2);
+        }
+     }
+
+     pchs <- GetShapeSchema(dataSet, show, grey.scale);
+     if(grey.scale) {
+        cols <- rep("black", length(cols));
+     }
+     if(show){ # display sample name set on
+        text(lv1, lv2, label=text.lbls, pos=4, xpd=T, cex=0.75);
+        points(lv1, lv2, pch=pchs, col=cols);
+     }else{
+        if (length(uniq.cols) == 1) {
+            points(lv1, lv2, pch=pchs, col=cols, cex=1.0);
+        } else {
+            if(grey.scale | (exists("shapeVec") && all(shapeVec>0))){
+                points(lv1, lv2, pch=pchs, col=cols, cex=1.8);
+            }else{
+                points(lv1, lv2, pch=21, bg=cols, cex=2);
+            }
+        }
+     }
+
+     uniq.pchs <- unique(pchs);
+     if(grey.scale) {
+        uniq.cols <- "black";
+     }
+     legend("topright", legend = legend.nm, pch=uniq.pchs, col=uniq.cols);
+
+     dev.off();
+	 frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#GetPLSLoadAxesSpec<-function(){
+#    pls.axis.lims;
+#}
+
+#' \code{PlotPLSLoadings} - plot loadings.
+#' @param plotType \code{"scatter"} for scatter plot or \code{"boxplot"} for box plot
+#' @param show If \code{TRUE} then points at the plot are labeled.
+#' @rdname PlotPLS
+#' @export
+
+# plot loading plot, also set the loading matrix for display
+
+PlotPLSLoading<-function(dataSet, analSet, imgName="pls_loading_", format="png", dpi=72, width=NA, plotType="scatter", show=T){
+	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal and PLS.Loadings first.")
+	if (is.null(analSet$plsr$imp.loads)) stop("Please, conduct PLS.Loadings first.")
+	loadings<-analSet$plsr$imp.loads
+	ldName1<-colnames(loadings)[1];
+    ldName2<-colnames(loadings)[2];
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$pls.loading<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    if(plotType == "scatter"){
+        par(mar=c(6,4,4,5));
+        plot(loadings[,1],loadings[,2], las=2, xlab=ldName1, ylab=ldName2);
+
+#        pls.axis.lims <<- par("usr"); # x1, x2, y1 ,y2
+
+        grid(col = "lightgray", lty = "dotted", lwd = 1);
+        points(loadings[,1],loadings[,2], pch=19, col="magenta");
+        if(show){
+            text(loadings[,1],loadings[,2], labels=substr(rownames(loadings), 1, 12), pos=4, col="blue", xpd=T);
+        }
+    }else{ # barplot
+        cmpd.nms <- substr(rownames(loadings), 1, 14);
+        hlims <- c(min(loadings[,1], loadings[,2]), max(loadings[,1], loadings[,2]));
+        layout(matrix(c(1,1,2,2,2), nrow=5, byrow=T))
+        par(mar=c(1,4,4,1));
+        barplot(loadings[,1], names.arg=NA, las=2, ylim=hlims, main = ldName1);
+
+        par(mar=c(10,4,3,1));
+        barplot(loadings[,2], names.arg=cmpd.nms, cex.names=1.0, las=2, ylim=hlims, main = ldName2);
+    }
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+GetPLSLoadCmpds<- function(analSet){
+    names(analSet$plsr$load.x.uniq);
+}
+
+GetPLSLoadCmpdInxs<-function(analSet){
+    analSet$plsr$load.x.uniq;
+}
+
+GetPLSLoadMat <- function(analSet){
+    as.matrix(cbind(analSet$plsr$load.x.uniq, analSet$plsr$imp.loads[,2]));
+}
+
+# get which number of components give best performance
+GetPLSBestTune<-function(analSet){
+    if(is.null(analSet$plsda$best.num)){
+        return (0);
+    }
+    analSet$plsda$best.num;
+}
+
+# obtain VIP score
+GetPLSSigMat<-function(analSet, type){
+    if(type == "vip"){
+        return (CleanNumber(signif(as.matrix(analSet$plsda$vip.mat),5)));
+    }else if(type == "coef"){
+        return (CleanNumber(signif(as.matrix(analSet$plsda$coef.mat),5)));
+    }else{
+        return (CleanNumber(signif(as.matrix(analSet$plsr$imp.loads),5)));
+    }
+}
+
+GetPLSSigRowNames<-function(analSet, type){
+    if(type == "vip"){
+        return (rownames(analSet$plsda$vip.mat));
+    }else if(type == "coef"){
+        return (rownames(analSet$plsda$coef.mat));
+    }else{
+        return (rownames(analSet$plsr$imp.loads))
+    }
+}
+
+GetPLSSigColNames<-function(analSet, type){
+    if(type == "vip"){
+        return (colnames(analSet$plsda$vip.mat));
+    }else if(type == "coef"){
+        return (colnames(analSet$plsda$coef.mat));
+    }else{
+        return (colnames(analSet$plsr$imp.loads));
+    }
+}
+
+GetPLS_CVRowNames <- function(analSet){
+    rownames(analSet$plsda$fit.info);
+}
+
+GetPLS_CVColNames <- function(analSet){
+    colnames(analSet$plsda$fit.info);
+}
+
+GetPLS_CVMat<-function(analSet){
+    return(signif(analSet$plsda$fit.info, 5));
+}
+
+GetMaxPLSPairComp<-function(dataSet){
+    return (min(dim(dataSet$norm)[1]-1, dim(dataSet$norm)[2]));
+}
+
+GetMaxPLSCVComp<-function(dataSet){
+    return (min(dim(dataSet$norm)[1]-2, dim(dataSet$norm)[2]));
+}
+
+GetDefaultPLSPairComp<-function(dataSet){
+    return (min(5, dim(dataSet$norm)[1]-1, dim(dataSet$norm)[2]));
+}
+
+GetDefaultPLSCVComp<-function(dataSet){
+    return (min(5, dim(dataSet$norm)[1]-2, dim(dataSet$norm)[2], dataSet$min.grp.size));
+}

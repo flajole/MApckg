@@ -1,0 +1,182 @@
+#' SAM analysis
+#'
+#' Perform Significance Analysis of Microarray (and Metabolites). Uses \code{\link[siggenes]{sam}} function.
+#'
+#' @param dataSet
+#' @param analSet
+#' @param method A character string or a name specifying the method/function that 
+#' should be used in the computation of the expression scores d.
+#' If \code{"d.stat"}, a modified t-statistic or F-statistic, respectively, will be computed as proposed by Tusher et al. (2001).
+#' If \cpde{"wilc.stat"}, a Wilcoxon rank sum statistic or Wilcoxon signed rank statistic will be used as expression score.
+#' @param paired Are values in data set paired or not.
+#' @param var.equal Are variances assumed equal or not.
+#' @return Native \code{analSet} with one added \code{$sam} element containing 
+#' standard \code{\link[siggenes]{sam}} function output
+#' @export
+
+# SAM analysis
+SAM.Anal<-function(dataSet, analSet, method="d.stat", paired=FALSE, var.equal=TRUE){
+
+    suppressMessages(require(siggenes));
+    mat<-t(dataSet$norm); # in sam the column is sample
+    cl<-as.numeric(dataSet$cls); # change to 0 and 1 for class label
+    if(dataSet$cls.num==2){
+        if(paired){
+            cl<-as.numeric(dataSet$pairs);
+        }
+        if(method == "d.stat"){
+            sam_out<-sam(mat, cl, method=d.stat, var.equal=var.equal, R.fold=0, rand=123);
+        }else{
+            sam_out<-sam(mat, cl, method=wilc.stat, R.fold=0,rand=123);
+        }	
+    }else{
+        sam_out<-sam(mat, cl, rand=123);
+    }
+    analSet$sam<-sam_out;
+	return(analSet);
+}
+
+#' SAM matrix of significance
+#'
+#' SAM matrix of significance. Writes results to \code{"sam_sigfeatures.csv"} file.
+#'
+#' @param analSet
+#' @param delta The delta to control FDR
+#' @return Native \code{analSet} with two added elements:
+#' \itemize{
+#' \item\code{$sam.cmpd} - matrix containing \code{d.value}, \code{stdev}, \code{rawp}, \code{q.value} columns
+#' \item\code{$sam.delta} - value of \code{delta} argument
+#' }
+#' @export
+SetSAMSigMat<-function(analSet, delta=1.3){
+		if (is.null(analSet$sam)) stop("Please, conduct SAM.Anal first.")
+        sam.sum<-summary(analSet$sam, delta);
+        summary.mat<-sam.sum@mat.sig;
+
+        sig.mat <-as.matrix(signif(summary.mat[,-c(1,6)],5));
+        write.csv(signif(sig.mat,5),file="sam_sigfeatures.csv");
+        analSet$sam.cmpds<-sig.mat;
+        analSet$sam.delta<-delta;
+		return(analSet);
+}
+
+#' Plot SAM
+#'
+#' Functions for plotting the results of SAM.
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @name PlotSAM
+NULL
+
+#' \code{PlotSAM.FDR} - plot FDR.
+#' @param delta The delta to control FDR. If \code{NULL}, then it's suggested automaticly
+#' @rdname PlotSAM
+#' @export
+
+PlotSAM.FDR<-function(dataSet, analSet, delta=NULL, imgName="sam_view_", format="png", dpi=72, width=NA){
+    if (is.null(analSet$sam)) stop("Please, conduct SAM.Anal first.")
+	if (is.null(delta)) delta <- GetSuggestedSAMDelta(analSet)
+	imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 10;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$sam.fdr<<-imgName;
+    }
+    h <- w*3/5;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+	par(mfrow=c(1,2), mar=c(5,6,4,1));
+	mat.fdr<-analSet$sam@mat.fdr;
+	plot(mat.fdr[,"Delta"],mat.fdr[,"FDR"],xlab='Delta',ylab=NA,type="b", col='blue', las=2);
+        abline(v = delta, lty=3, col="magenta");
+        mtext("FDR", side=2, line=5);
+        par(mar=c(5,5,4,2))
+	plot(mat.fdr[,"Delta"],mat.fdr[,"Called"],xlab='Delta',ylab="Significant feature No.",type="b", col='blue', las=2);
+        abline(v = delta, lty=3, col="magenta");
+
+        hit.inx <- mat.fdr[,"Delta"] <= delta;
+        my.fdr <- signif(min(mat.fdr[,"FDR"][hit.inx]), 3);
+        my.sigs <- min(mat.fdr[,"Called"][hit.inx]);
+        mtext(paste("Delta:", delta, " FDR:", my.fdr, " Sig. cmpds:", my.sigs), line=-2, side = 3, outer = TRUE, font=2)
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+#' \code{PlotSAM.Cmpd} - plot significant features.
+#' @rdname PlotSAM
+#' @export
+
+PlotSAM.Cmpd<-function(dataSet, analSet, imgName="sam_imp_", format="png", dpi=72, width=NA){
+    if (is.null(analSet$sam)) stop("Please, conduct SAM.Anal and SetSAMSigMat first.")
+	if (is.null(analSet$sam.cmpds)) stop("Please, conduct SetSAMSigMat first.")
+	imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$sam.cmpd<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+	plot(analSet$sam, analSet$sam.delta);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+GetSAMSigMat<-function(analSet){
+      return(CleanNumber(analSet$sam.cmpds));
+}
+
+GetSAMSigRowNames<-function(analSet){
+    rownames(analSet$sam.cmpds);
+}
+
+GetSAMSigColNames<-function(analSet){
+    colnames(analSet$sam.cmpds);
+}
+
+GetSigTable.SAM<-function(analSet){
+    GetSigTable(analSet$sam.cmpds, "SAM");
+}
+
+# obtain a default delta with reasonable number
+# of sig features and decent FDR
+GetSuggestedSAMDelta<-function(analSet){
+    	mat.fdr<-analSet$sam@mat.fdr
+        deltaVec <- mat.fdr[,"Delta"];
+        fdrVec <- mat.fdr[,"FDR"];
+        signumVec <- mat.fdr[,"Called"];
+        for(i in 1:length(deltaVec)){
+            delta = deltaVec[i];
+            fdr = fdrVec[i];
+            called = signumVec[i];
+            if(called > 0){ # at least 1 significant cmpd
+                # check fdr, default threshold 0.01
+                # if too many significant compounds, tight up and vice versa
+                if(fdr < 0.001){
+                     return (delta);
+                }else if(fdr < 0.01 & called < 100){
+                     return (delta);
+                }else if(fdr < 0.05 & called <50){
+                    return (delta);
+                }else if(fdr < 0.1 & called < 20){
+                     return (delta);
+                }else if(called < 10){
+                    return (delta);
+                }
+            }
+        }
+        return (deltaVec[1]); # if no significant found, return the first one
+}

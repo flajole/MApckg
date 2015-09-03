@@ -1,0 +1,148 @@
+#' SOM analysis
+#'
+#' Perform Self Organizing Map analysis. Uses \code{\link[som]{som}} function.
+#' The parameters and outcome are identical.
+#' @param dataSet
+#' @param analSet 
+#' @param xdim An integer specifying the x-dimension of the map.
+#' @param ydim An integer specifying the y-dimension of the map.
+#' @param initMethod A character string specifying the initializing method. 
+#' The following are permitted: \code{"sample"} uses a random sample from the data; 
+#' \code{"random"} uses random draws from N(0,1); 
+#' \code{"linear"} uses the linear grids upon the first two principle components directin.
+#' @param neigb	 A character string specifying the neighborhood function type.
+#' The following are permitted: \code{"bubble"}, \code{"gaussian"}
+#' @return Native \code{analSet} with one added \code{$som} element containing
+#' standard \code{\link[som]{som}} output.
+#' @export
+
+# SOM analysis
+SOM.Anal<-function(dataSet, analSet, x.dim=1, y.dim=3, initMethod="linear", neigb = 'gaussian'){
+    require(som);
+ 	analSet$som<-som(as.matrix(dataSet$norm), xdim=x.dim, ydim=y.dim, init=initMethod, neigh=neigb);
+	return(analSet);
+}
+
+#' Plot SOM
+#'
+#' Plot SOM map for  less than 20 clusters.
+#' Please note : only cluster members will be calculated if the total cluster number (xdim*ydim) > 20. 
+#' The blue lines represent the median intensities of each cluster.
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @export
+
+# plot SOM map for  less than 20 clusters
+PlotSOM <- function(dataSet, analSet, imgName="som_", format="png", dpi=72, width=NA){
+	if (is.null(analSet$som)) stop("Please, conduct SOM.Anal first.")
+	xdim<-analSet$som$xdim;
+	ydim<-analSet$som$ydim;
+    total<-xdim*ydim;
+    if(total>20) { return();}
+
+    ylabel<-GetValueLabel(dataSet);
+    clust<-analSet$som$visual;
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$som<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*8/9;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    par(mfrow = GetXYCluster(total), mar=c(5,4,2,2));
+	for (i in 0:(xdim-1)) {
+            xTrue<-clust$x == i;
+            for (j in 0:(ydim-1)) {
+               yTrue<-clust$y == j;
+               sel.inx<-xTrue & yTrue; # selected row
+               if(sum(sel.inx)>0){ # some cluster may not contain any member
+                    matplot(t(dataSet$norm[sel.inx, ]), type="l", col='grey', axes=F, ylab=ylabel,
+                            main=paste("Cluster(", i, ",", j,")", ", n=", sum(sel.inx), sep=""))
+                    lines(apply(dataSet$norm[sel.inx, ], 2, median), type="l", col='blue', lwd=1);
+                }else{ # plot a dummy 
+                    plot(t(dataSet$norm[1, ]), type="n", axes=F, ylab=ylabel,
+                            main=paste("Cluster(", i, ",", j,")",", n=", sum(sel.inx),sep=""))
+                }
+                axis(2);
+                axis(1, 1:ncol(dataSet$norm), substr(colnames(dataSet$norm), 1, 7), las=2);
+            }
+	}
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+# get members for given cluster index, return a character string
+GetSOMClusterMembers<-function(analSet, i, j){
+	clust<-analSet$som$visual;
+	xTrue<-clust$x == i;
+	yTrue<-clust$y == j;
+    hit.inx <- xTrue & yTrue;
+
+    all.cols <- GetColorSchema(dataSet);
+    paste("<font color=\"", all.cols[hit.inx], "\">", rownames(dataSet$norm)[hit.inx], "</font>",collapse =", ");
+}
+
+GetAllSOMClusterMembers<-function(dataSet, analSet){
+	clust<-analSet$som$visual;
+	xdim<-analSet$som$xdim;
+	ydim<-analSet$som$ydim;
+
+	clust.df = data.frame();
+	rowNameVec = c();
+	i = 0;
+	while(i < xdim){
+	    j = 0;
+	    while(j < ydim){
+		xTrue<-clust$x == i;
+		yTrue<-clust$y == j;
+		if(i==0 & j==0){ # bug in R, the first one need to be different
+			clust.df <- rbind(paste(rownames(dataSet$norm)[xTrue & yTrue], collapse = " "));
+			rowNameVec <- c(paste("Cluster(", i, ",", j,")"));
+		}else{
+			clust.df <- rbind(clust.df, paste(rownames(dataSet$norm)[xTrue & yTrue], collapse=" "));
+			rowNameVec <- c(rowNameVec, paste("Cluster(", i, ",", j,")"));
+		}
+		j = j+1;
+	   }
+	   i = i+1;
+	}
+	row.names(clust.df)<- rowNameVec;
+	colnames(clust.df)<-"Samples in each cluster";
+	print(xtable(clust.df, align="l|p{8cm}", caption="Clustering result using SOM"),caption.placement="top", size="\\scriptsize");
+}
+
+# determine the number of rows and columns for a given total
+# number of plots (used by Kmeans and SOM plots)
+GetXYCluster<-function(total){
+    if(total>16){
+        ncol<-4;
+        nrow<-5;
+    }else if(total>12){
+       ncol<-4;
+       nrow<-4;
+    }else if(total>9){
+       ncol<-3;
+       nrow<-4;
+    }else if(total>6){
+       ncol<-3;
+       nrow<-3;
+    }else if(total>4){
+       ncol<-2;
+       nrow<-3;
+    }else{
+       ncol<-1;
+       nrow<-total;
+    }
+    c(nrow, ncol);
+}

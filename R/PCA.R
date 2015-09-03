@@ -1,0 +1,365 @@
+#' Perform PCA
+#'
+#' Uses \code{\link[stats]{prcomp}} function.
+#' Writes two output files: \code{"pca_score.csv"} and \code{"pca_loadings.csv"}.
+#' Adds \code{analSet$pca} element with \code{\link[stats]{prcomp}} function output
+#' and some basic statistics.
+#'
+#' @param dataSet
+#' @param analSet
+#' @return Native \code{analSet} with one added \code{$pca} element consisting of:
+#' \itemize{
+#' \item all the elements of the standard \code{\link[stats]{prcomp}} output
+#' \item\code{$std} - standard deviation
+#' \item\code{$variance} - variance explained by each PC
+#' \item\code{$cum.var} - cummulated variance explained
+#' }
+#' @export
+
+# perform PCA analysis
+PCA.Anal<-function(dataSet, analSet){
+
+    pca<-prcomp(dataSet$norm, center=F, scale=F);
+
+    # obtain variance explained
+    sum.pca<-summary(pca);
+    imp.pca<-sum.pca$importance;
+    std.pca<-imp.pca[1,]; # standard devietation
+    var.pca<-imp.pca[2,]; # variance explained by each PC
+    cum.pca<-imp.pca[3,]; # cummulated variance explained
+
+    # store the item to the pca object
+    analSet$pca<-append(pca, list(std=std.pca, variance=var.pca, cum.var=cum.pca));
+    write.csv(signif(analSet$pca$x,5), file="pca_score.csv");
+    write.csv(signif(analSet$pca$rotation,5), file="pca_loadings.csv");
+	return(analSet);
+}
+
+#' PCA loadings
+#'
+#' PCA loadings.
+#' Adds loading matrix to \code{analSet$pca} element.
+#'
+#' @param analSet
+#' @param inx1,inx2 The order numbers of PCs.
+#' @return Native \code{analSet} with two added elements:
+#' \itemize{
+#' \item\code{$pca$load.x.uniq} - ???
+#' \item\code{$pca$imp.loads} - loading matrix
+#' }
+#' @export
+
+PCA.Loadings<-function(dataSet, analSet, inx1 = 1, inx2 = 2){
+	if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
+	loadings<-signif(as.matrix(cbind(analSet$pca$rotation[,inx1],analSet$pca$rotation[,inx2])),5);
+    ldName1<-paste("Loadings", inx1);
+    ldName2<-paste("Loadings", inx2);
+    colnames(loadings)<-c(ldName1, ldName2);
+    load.x.uniq <- jitter(loadings[,1]);
+    names(load.x.uniq) <- rownames(loadings);
+    analSet$pca$load.x.uniq <- load.x.uniq;
+    analSet$pca$imp.loads<-loadings; # set up the loading matrix
+	return(analSet);
+}
+
+
+#' Plot PCA
+#'
+#' Set of functions for plotting the results of PCA.
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @name PlotPCA
+NULL
+
+#' \code{PlotPCAPairSummary} - plot summary.
+#' @param pc.num The number of plotted principal components.
+#' @rdname PlotPCA
+# format: png, tiff, pdf, ps, svg
+PlotPCAPairSummary<-function(dataSet, analSet, imgName="pca_pair_", format="png", dpi=72, width=NA, pc.num=2){
+    if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
+	pclabels <- paste("PC", 1:pc.num, "\n", round(100*analSet$pca$variance[1:pc.num],1), "%");
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 10;
+    }else if(width == 0){
+        w <- 8;
+        imgSet$pca.pair <- imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    if(dataSet$cls.type == "disc"){
+        pairs(analSet$pca$x[,1:pc.num], col=GetColorSchema(dataSet), pch=as.numeric(dataSet$cls)+1, labels=pclabels);
+    }else{
+        pairs(analSet$pca$x[,1:pc.num], labels=pclabels);
+    }
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotPCAScree} - plot scree plot of varience explained by PC.
+#' @param scree.num The total number of plotted PCs.
+#' @rdname PlotPCA
+# scree plot
+PlotPCAScree<-function(dataSet, analSet, imgName="pca_scree_", format="png", dpi=72, width=NA, scree.num){
+    if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
+	stds <-analSet$pca$std[1:scree.num];
+	pcvars<-analSet$pca$variance[1:scree.num];
+	cumvars<-analSet$pca$cum.var[1:scree.num];
+
+    ylims <- range(c(pcvars,cumvars));
+    extd<-(ylims[2]-ylims[1])/10
+    miny<- ifelse(ylims[1]-extd>0, ylims[1]-extd, 0);
+    maxy<- ifelse(ylims[2]+extd>1, 1.0, ylims[2]+extd);
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 10;
+    }else if(width == 0){
+        w <- 8;
+        imgSet$pca.scree<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*2/3;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    par(mar=c(5,5,6,3));
+    plot(pcvars, type='l', col='blue', main='Scree plot', xlab='PC index', ylab='Variance explained', ylim=c(miny, maxy), axes=F)
+    text(pcvars, labels =paste(100*round(pcvars,3),'%'), adj=c(-0.3, -0.5), srt=45, xpd=T)
+    points(pcvars, col='red');
+
+    lines(cumvars, type='l', col='green')
+    text(cumvars, labels =paste(100*round(cumvars,3),'%'), adj=c(-0.3, -0.5), srt=45, xpd=T)
+    points(cumvars, col='red');
+
+    abline(v=1:scree.num, lty=3);
+    axis(2);
+    axis(1, 1:length(pcvars), 1:length(pcvars));
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotPCA2DScore} - plot 2D score plot.
+#' @param inx1,inx2 The order numbers of PCs.
+#' @param reg Set the confidence level for plotting confidence region ellipse.
+#' @param show If \code{TRUE} then points at the plot are labeled.
+#' @param grey.scale If \code{TRUE} then plot is colored in 50 shades of gray.
+#' @rdname PlotPCA
+#' @export
+# 2D score plot
+PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, reg = 0.95, show=TRUE, grey.scale = FALSE){
+	if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
+    xlabel = paste("PC",inx1, "(", round(100*analSet$pca$variance[inx1],1), "%)");
+    ylabel = paste("PC",inx2, "(", round(100*analSet$pca$variance[inx2],1), "%)");
+    pc1 = analSet$pca$x[, inx1];
+    pc2 = analSet$pca$x[, inx2];
+    text.lbls<-substr(names(pc1),1,14) # some names may be too long
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        imgSet$pca.score2d<<-imgName;
+        w <- 7.2;
+    }else{
+        w <- width;
+    }
+    h <- w;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    suppressMessages(require('ellipse'));
+    op<-par(mar=c(5,5,3,3));
+
+    if(dataSet$cls.type == "disc"){
+        # obtain ellipse points to the scatter plot for each category
+        lvs <- levels(dataSet$cls);
+        pts.array <- array(0, dim=c(100,2,length(lvs)));
+        for(i in 1:length(lvs)){
+            inx <-dataSet$cls == lvs[i];
+            groupVar<-var(cbind(pc1[inx],pc2[inx]), na.rm=T);
+            groupMean<-cbind(mean(pc1[inx], na.rm=T),mean(pc2[inx], na.rm=T));
+            pts.array[,,i] <- ellipse(groupVar, centre = groupMean, level = reg, npoints=100);
+        }
+
+        xrg <- range (pc1, pts.array[,1,]);
+        yrg <- range (pc2, pts.array[,2,]);
+        x.ext<-(xrg[2]-xrg[1])/12;
+        y.ext<-(yrg[2]-yrg[1])/12;
+        xlims<-c(xrg[1]-x.ext, xrg[2]+x.ext);
+        ylims<-c(yrg[1]-y.ext, yrg[2]+y.ext);
+
+        cols <- GetColorSchema(dataSet, grey.scale);
+        uniq.cols <- unique(cols);
+
+        plot(pc1, pc2, xlab=xlabel, xlim=xlims, ylim=ylims, ylab=ylabel, type='n', main="Scores Plot",
+             col=cols, pch=as.numeric(dataSet$cls)+1); ## added
+        grid(col = "lightgray", lty = "dotted", lwd = 1);
+
+        # make sure name and number of the same order DO NOT USE levels, which may be different
+        legend.nm <- unique(as.character(dataSet$cls));
+        ## uniq.cols <- unique(cols);
+
+        ## BHAN: when same color is choosen; it makes an error
+        if ( length(uniq.cols) > 1 ) {
+            names(uniq.cols) <- legend.nm;
+        }
+
+        # draw ellipse
+        for(i in 1:length(lvs)){
+            if (length(uniq.cols) > 1) {
+                polygon(pts.array[,,i], col=adjustcolor(uniq.cols[lvs[i]], alpha=0.25), border=NA);
+            } else {
+                polygon(pts.array[,,i], col=adjustcolor(uniq.cols, alpha=0.25), border=NA);
+            }
+            if(grey.scale) {
+                lines(pts.array[,,i], col=adjustcolor("black", alpha=0.5), lty=2);
+            }
+        }
+
+        pchs <- GetShapeSchema(dataSet, show, grey.scale);
+        if(grey.scale) {
+            cols <- rep("black", length(cols));
+        }
+        if(show){
+            text(pc1, pc2, label=text.lbls, pos=4, xpd=T, cex=0.75);
+            points(pc1, pc2, pch=pchs, col=cols);
+        }else{
+            if(length(uniq.cols) == 1){
+                points(pc1, pc2, pch=pchs, col=cols, cex=1.0);
+            }else{
+                if(grey.scale | (exists("shapeVec") && all(shapeVec>0))){
+                    points(pc1, pc2, pch=pchs, col=cols, cex=1.8);
+                }else{
+                    points(pc1, pc2, pch=21, bg=cols, cex=2);
+                }
+            }
+        }
+        uniq.pchs <- unique(pchs);
+        if(grey.scale) {
+            uniq.cols <- "black";
+        }
+        legend("topright", legend = legend.nm, pch=uniq.pchs, col=uniq.cols);
+    }else{
+        plot(pc1, pc2, xlab=xlabel, ylab=ylabel, type='n', main="Scores Plot");
+        points(pc1, pc2, pch=15, col="magenta");
+        text(pc1, pc2, label=text.lbls, pos=4, col ="blue", xpd=T, cex=0.8);
+    }
+    par(op);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotPCABiplot} - plot the biplot.
+#' @param inx1,inx2 The order numbers of PCs. 
+#' @rdname PlotPCA
+#' @export
+
+# Biplot, set xpd = T to plot outside margin
+PlotPCABiplot<-function(dataSet, analSet, imgName="pca_biplot_", format="png", dpi=72, width=NA, inx1 =1, inx2 = 2){
+	if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
+	choices = c(inx1, inx2);
+	scores<-analSet$pca$x;
+    lam <- analSet$pca$sdev[choices]
+    n <- NROW(scores)
+    lam <- lam * sqrt(n);
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$pca.biplot<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    biplot(t(t(scores[, choices]) / lam), t(t(analSet$pca$rotation[, choices]) * lam), xpd =T, cex=0.9);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotPCALoadings} - plot loadings.
+#' @param plotType \code{"scatter"} for scatter plot or \code{"boxplot"} for box plot
+#' @param show If \code{TRUE} then points at the plot are labeled.
+#' @rdname PlotPCA
+#' @export
+
+# plot PCA loadings and also set up the matrix for display
+PlotPCALoadings<-function(dataSet, analSet, imgName="pca_loading_", format="png", dpi=72, width=NA, plotType="scatter", show=TRUE){
+    if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal and PCA.Loadings first.")
+	if (is.null(analSet$pca$imp.loads)) stop("Please, conduct PCA.Loadings first.")
+	match.arg(plotType, c("scatter","barplot"))
+	loadings <- analSet$pca$imp.loads
+	ldName1<-colnames(loadings)[1];
+    ldName2<-colnames(loadings)[2];
+	imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$pca.loading<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    if(plotType=="scatter"){
+        par(mar=c(6,5,2,6));
+        plot(loadings[,1],loadings[,2], las=2, xlab=ldName1, ylab=ldName2);
+
+        #pca.axis.lims <<- par("usr"); # x1, x2, y1 ,y2
+
+        grid(col = "lightgray", lty = "dotted", lwd = 1);
+        points(loadings[,1],loadings[,2], pch=19, col="magenta");
+        if(show){
+            text(loadings[,1],loadings[,2], labels=substr(rownames(loadings), 1, 12), pos=4, col="blue", xpd=T);
+        }
+    }else{ # barplot
+        layout(matrix(c(1,1,2,2,2), nrow=5, byrow=T), respect = FALSE)
+        cmpd.nms <- substr(rownames(loadings), 1, 14);
+        hlims <- c(min(loadings[,1], loadings[,2]), max(loadings[,1], loadings[,2]));
+
+        par(mar=c(1,4,4,1));
+        barplot(loadings[,1], names.arg=NA, las=2, ylim=hlims, main =ldName1);
+
+        par(mar=c(10,4,3,1));
+        barplot(loadings[,2], names.arg=cmpd.nms, las=2, cex.names=1.0, ylim=hlims, main =ldName2);
+    }
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+#GetPCALoadAxesSpec<-function(){
+#    pca.axis.lims;
+#}
+
+GetPCALoadCmpds<- function(analSet){
+    names(analSet$pca$load.x.uniq);
+}
+
+GetPCALoadCmpdInxs<-function(analSet){
+    analSet$pca$load.x.uniq;
+}
+
+GetPCALoadMat <- function(analSet){
+    as.matrix(cbind(analSet$pca$load.x.uniq, analSet$pca$imp.loads[,2]));
+}
+
+# for plotting, max top 9
+GetMaxPCAComp<-function(dataSet){
+    return (min(9, dim(dataSet$norm)[1]-1, dim(dataSet$norm)[2]));
+}
+

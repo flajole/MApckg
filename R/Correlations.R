@@ -1,0 +1,337 @@
+#' Plot correlations heatmap
+#'
+#' Plot correlations heatmap and write an output file \code{"correlation_table.csv"}.
+#' Note, the heatmap will only show correlations for a maximum of 1000 features. 
+#' For larger datasets, only top 1000 features will be selected based on their interquantile range (IQR). 
+#' When color distribution is fixed, you can potentially compare the correlation patterns among different data sets. 
+#' In this case, you can choose "do not perform clustering" for all data set, 
+#' or only to perform clustering on a single reference data set, 
+#' then manually re-arranged other data sets according to the clustering pattern of the reference data set. 
+#' 
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @param cor.method Method of correlation calculation, one of \code{"pearson"}, \code{"kendall"}, \code{"spearman"}
+#' @param colors The color contrast. One of \code{"default"}, \code{"gbr"} (red/green), \code{"heat"}, \code{"topo"}, \code{"gray"}
+#' @param viewOpt View mode, \code{"overview"} or \code{"detailed"}
+#' @param fix.col If \code{TRUE}, color distribution is fixed.
+#' @param no.clst If \code{TRUE}, no clustering lines are plotted.
+#' @param top ?????????????????????
+#' @param top.num The number of the features with the best contrast to be plotted.
+#' @export
+
+PlotCorrHeatMap<-function(dataSet, analSet, imgName="corr_heat_", format="png", dpi=72, width=NA, cor.method = "pearson", 
+                colors="default", viewOpt="overview", fix.col=F, no.clst = FALSE, top=F, top.num=999){
+	match.arg(colors, c("gbr", "heat", "topo", "gray", "default"))
+	match.arg(cor.method, c("pearson", "kendall", "spearman"))
+	match.arg(viewOpt, c("overview", "detailed"))
+    main <- xlab <- ylab <- NULL;
+    data <- dataSet$norm;
+
+    if(ncol(data) > 1000){
+        filter.val <- apply(data.matrix(data), 2, IQR, na.rm=T);
+        rk <- rank(-filter.val, ties.method='random');
+        data <- as.data.frame(data[,rk <=1000]);
+
+        print("Data is reduced to 1000 vars ..");
+    }
+
+    colnames(data)<-substr(colnames(data), 1, 18);
+    corr.mat<-cor(data, method=cor.method);
+
+    # use total abs(correlation) to select
+    if(top){
+        cor.sum <- apply(abs(corr.mat), 1, sum);
+        cor.rk <- rank(-cor.sum);
+        var.sel <- cor.rk <= top.num;
+        corr.mat <- corr.mat[var.sel, var.sel];
+    }
+
+    # set up parameter for heatmap
+    suppressMessages(require(RColorBrewer));
+    suppressMessages(require(gplots));
+    if(colors=="gbr"){
+        colors <- colorRampPalette(c("green", "black", "red"), space="rgb")(256);
+    }else if(colors == "heat"){
+        colors <- heat.colors(256);
+    }else if(colors == "topo"){
+        colors <- topo.colors(256);
+    }else if(colors == "gray"){
+        colors <- colorRampPalette(c("grey90", "grey10"))(256);
+    }else{
+        colors <- rev(colorRampPalette(brewer.pal(10, "RdBu"))(256));
+    }
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+   if(viewOpt == "overview"){
+        if(is.na(width)){
+            w <- 9;
+        }else if(width == 0){
+            w <- 7.2;
+            imgSet$heatmap<<-imgName;
+        }else{
+            w <- 7.2;
+        }
+        h <- w;
+    }else{
+        if(ncol(corr.mat) > 50){
+            myH <- ncol(corr.mat)*12 + 40;
+        }else if(ncol(corr.mat) > 20){
+            myH <- ncol(corr.mat)*12 + 60;
+        }else{
+            myH <- ncol(corr.mat)*12 + 120;
+        }
+        h <- round(myH/72,2);
+
+        if(is.na(width)){
+            w <- h;
+        }else if(width == 0){
+            w <- h <- 7.2;
+            imgSet$corr.heatmap<<-imgName;
+        }else{
+            w <- h <- 7.2;
+        }
+    }
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    if(no.clst){
+        rowv=FALSE;
+        colv=FALSE;
+        dendro= "none";
+    }else{
+        rowv=TRUE;
+        colv=TRUE;
+        dendro= "both";
+    }
+
+    require(pheatmap);
+    if(fix.col){
+        breaks <- seq(from = -1, to = 1, length = 257);
+        pheatmap(corr.mat, 
+            fontsize=8, fontsize_row=8, 
+            cluster_rows = colv, 
+            cluster_cols = rowv,
+            color = colors,
+            breaks = breaks
+            );
+      }else{
+        pheatmap(corr.mat, 
+            fontsize=8, fontsize_row=8, 
+            cluster_rows = colv, 
+            cluster_cols = rowv,
+            color = colors
+            );
+      }
+     dev.off();
+     write.csv(signif(corr.mat,5), file="correlation_table.csv")
+	 frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' Pattern hunter
+#'
+#' Correlation analysis. 
+#' 
+#' @param dataSet
+#' @param analSet
+#' @param dist.name Method of correlation calculating, one of \code{"pearson"}, \code{"kendall"}, \code{"spearman"}
+#' @return Native \code{analSet} with one added \code{$corr} element consisting of
+#' \itemize{
+#' \item\code{$corr$sig.nm} - ???
+#' \item\code{$corr$cor.mat} - correlation matrix
+#' \item\code{$corr$pattern} - name of the feature of comparison or the used pattern.
+#' }
+#' @name PatternHunter
+NULL
+
+#' \code{FeatureCorrelation} performs analysis against a given feature.
+#' Writes an output file \code{"correlation_feature.csv"}
+#' @param varName The name of the feature to perform correlation analysis against.
+#' @rdname PatternHunter
+#' @export
+# calculate correlation of all other feature to a given feature name
+
+FeatureCorrelation<-function(dataSet, analSet, dist.name="pearson", varName){
+
+    cbtempl.results <- apply(dataSet$norm, 2, template.match, dataSet$norm[,varName], dist.name);
+    cor.res<-t(cbtempl.results);
+
+    fdr.col <- p.adjust(cor.res[,3], "fdr");
+    cor.res <- cbind(cor.res, fdr.col);
+    colnames(cor.res)<-c("correlation", "t-stat", "p-value", "FDR");
+    ord.inx<-order(cor.res[,3])
+    sig.mat <-signif(cor.res[ord.inx,],5);
+
+    fileName <- "correlation_feature.csv";
+    write.csv(sig.mat,file=fileName);
+
+    analSet$corr$sig.nm<-fileName;
+    analSet$corr$cor.mat<-sig.mat;
+    analSet$corr$pattern<-varName;
+    return(analSet);
+}
+#' \code{Match.Pattern} performs analysis against a given pattern. 
+#' Writes an output file \code{"correlation_pattern.csv"} respectively.
+#' @param pattern A character vector, the pattern to search. The pattern is specified as a series of numbers separated by "-". 
+#' Each number corresponds to the expected expression pattern in the corresponding group. 
+#' For example, a 1-2-3-4 pattern is used to search for features that increase linearly with time 
+#' in a time-series data with four time points (or four groups). 
+#' The order of the groups is given as the first item in the predefined patterns.
+#' @rdname PatternHunter
+#' @export
+Match.Pattern<-function(dataSet, analSet, dist.name="pearson", pattern=NULL){
+    match.arg(dist.name,  c("pearson", "kendall", "spearman"))
+	if(is.null(pattern)){
+        pattern <- paste(1:length(levels(dataSet$cls)), collapse="-");
+    }
+    templ <- as.numeric(ClearStrings(strsplit(pattern, "-")[[1]]));
+
+    if(all(templ==templ[1])){
+        stop("Cannot calculate correlation on constant values!");
+    }
+
+    new.template <- vector(mode="numeric", length=length(dataSet$cls))
+    # expand to match each levels in the dataSet$cls
+    all.lvls <- levels(dataSet$cls);
+
+    if(length(templ)!=length(all.lvls)){
+        stop("Wrong template - must the same length as the group number!");
+    }
+
+    for(i in 1:length(templ)){
+        hit.inx <- dataSet$cls == all.lvls[i]
+        new.template[hit.inx] = templ[i];
+    }
+
+    cbtempl.results <- apply(dataSet$norm, 2, template.match, new.template, dist.name);
+
+    cor.res<-t(cbtempl.results);
+
+    fdr.col <- p.adjust(cor.res[,3], "fdr");
+    cor.res <- cbind(cor.res, fdr.col);
+    colnames(cor.res)<-c("correlation", "t-stat", "p-value", "FDR");
+    ord.inx<-order(cor.res[,3]);
+
+    sig.mat <- signif(cor.res[ord.inx,],5);
+
+    fileName <- "correlation_pattern.csv";
+    write.csv(sig.mat,file=fileName);
+
+    analSet$corr$sig.nm <- fileName;
+    analSet$corr$cor.mat<- sig.mat;
+    analSet$corr$pattern<- pattern;
+    return(analSet);
+}
+
+# Run template on all the high region effect genes
+template.match <- function(x, template, dist.name) {
+  k<-cor.test(x,template, method=dist.name);
+  c(k$estimate, k$stat, k$p.value)
+}
+
+GenerateTemplates <- function(dataSet){
+
+    level.len <- length(levels(dataSet$cls));
+
+    # only specify 4: increasing, decreasing, mid high, mid low, constant
+    incs <- 1:level.len;
+    desc <- level.len:1;
+
+    if(level.len > 2){
+        # use ceiling, so that the peak will be right for even length
+        mid.pos <- ceiling((level.len+1)/2);
+        mid.high <- c(1:mid.pos, seq(mid.pos-1,by=-1,length.out=level.len-mid.pos));
+        mid.low <- c(mid.pos:1, seq(2, length.out=level.len-mid.pos));
+
+        res <- rbind(incs, desc, mid.high, mid.low); # add the constant one
+    }else{
+        res <- rbind(incs, desc);
+    }
+    # turn into string
+    res <- apply(res, 1, paste, collapse="-");
+
+    # add the ledgends
+    res <- c(paste(levels(dataSet$cls), collapse="-"), res);
+    return (res);
+}
+
+
+#' Plot pattern correlations
+#'
+#' Plot the top 25 features correlated to a feature or a pattern.
+#' 
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @export
+
+PlotCorr <- function(dataSet, analSet, imgName="ptn_", format="png", dpi=72, width=NA){
+	if (is.null(analSet$corr)) stop("Please, conduct Match.Pattern or FeatureCorrelation first.")
+    cor.res <- analSet$corr$cor.mat;
+    pattern <- analSet$corr$pattern;
+    title <- paste(GetVariableLabel(dataSet), "correlated with the", pattern);
+    if(nrow(cor.res) > 25){
+
+        # first get most signficant ones (p value)
+        ord.inx<-order(cor.res[,3]);
+        cor.res <- cor.res[ord.inx, ];
+        cor.res <- cor.res[1:25, ];
+
+        # then order by their direction (correlation)
+        ord.inx<-order(cor.res[,1]);
+        if(sum(cor.res[,1] > 0) == 0){ # all negative correlation
+            ord.inx <- rev(ord.inx);
+        }
+        cor.res <- cor.res[ord.inx, ];
+        title <- paste("Top 25", tolower(GetVariableLabel(dataSet)), "correlated with the", pattern);
+    }
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- h <- 7.2;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$corr<<-imgName;
+    }else{
+        w <- h <- width;
+    }
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    par(mar=c(5,6,4,3))
+    rownames(cor.res)<-substr(rownames(cor.res), 1, 18);
+    cols <- ifelse(cor.res[,1] >0, "mistyrose","lightblue");
+
+    dotchart(cor.res[,1], pch="", xlim=c(-1,1), xlab="Correlation coefficients", main=title);
+    rownames(cor.res) <- NULL;
+    barplot(cor.res[,1], space=c(0.5, rep(0, nrow(cor.res)-1)), xlim=c(-1,1), xaxt="n", col = cols, add=T,horiz=T);
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+
+GetCorrSigFileName <- function(analSet){
+    analSet$corr$sig.nm;
+}
+
+GetCorSigMat<-function(analSet){
+    as.matrix(CleanNumber(analSet$corr$cor.mat));
+}
+
+GetCorSigRowNames<-function(analSet){
+    rownames(analSet$corr$cor.mat);
+}
+
+GetCorSigColNames<-function(analSet){
+    colnames(analSet$corr$cor.mat);
+}
+
+GetSigTable.Corr<-function(analSet){
+    GetSigTable(analSet$corr$cor.mat, "Pattern search using correlation analysis");
+}
+

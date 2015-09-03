@@ -1,0 +1,319 @@
+#' Plot heatmap
+#'
+#' Plot a sub heatmap based on results from t-tests/ANOVA, VIP or Random Forest analysis.
+#' Uses \code{\link[pheatmap]{pheatmap}} function.
+#' Heatmap provides intuitive visualization of the data table. 
+#' Each colored cell on the map corresponds to a concentration value in your data table, 
+#' with samples in rows and features/compounds in columns. 
+#' You can use heatmap to identify samples/features that are unusually high/low. \cr
+#' Tip 1: Do not re-organize samples/rows to show the natural contrast among groups (with each group a block). \cr
+#' Tip 2: Display top number of features ranked by t-tests to retain the most constrasting patterns.
+#' @param dataSet
+#' @param analSet 
+#' @param smplDist The distance measure, one of \code{"euclidean"}, \code{"pearson"}, \code{"minkowski"}
+#' @param clstDist The agglomeration method to be used, one of "ward.D", "ward.D2", "single", "complete", "average".
+#' For details: \code{\link[pheatmap]{pheatmap}}
+#' @param colors The color contrast. One of \code{"default"}, \code{"gbr"} (red/green), \code{"heat"}, \code{"topo"}, \code{"gray"}
+#' @param method.nm Type of analysis applied to detect features with the best contrast. One of \code{"tanova"} - for t-test or ANOVA;
+#' \code{"vip"} - for PLS-DA VIP; \code{"rf"} - for Random Forest analysis
+#' @param top.num The number of the features with the best contrast to be plotted.
+#' @param viewOpt View mode, \code{"overview"} or \code{"detailed"}
+#' @param rowV If \code{TRUE}, samples are reorganized.
+#' @param colV If \code{TRUE}, features are reorganized.
+#' @param border If \code{TRUE}, show cell borders.
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @return Native \code{analSet} with one added \code{$htmap} element containing:
+#' \itemize{
+#' \item\code{$htmap$dist.par} - equal \code{smplDist} argument value
+#' \item\code{$htmap$clust.par} - equal \code{clstDist} argument value  
+#' }
+#' @export
+
+# plot a sub heatmap based on results from t-tests/ANOVA, VIP or randomforest
+PlotSubHeatMap <- function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72, width=NA, 
+							smplDist="euclidean", clstDist="ward.D", colors="default", method.nm="tanova", top.num = 25, viewOpt="overview", rowV= TRUE, colV= TRUE, border=T){
+	match.arg(colors, c("gbr", "heat", "topo", "gray", "default"))
+	match.arg(smplDist, c("pearson", "euclidean", "minkowski"))
+	match.arg(clstDist, c("ward.D", "ward.D2", "single", "complete", "average"))
+	match.arg(viewOpt, c("overview", "detailed"))
+	match.arg(method.nm, c("tanova", "vip", "rf"))
+    var.nms = colnames(dataSet$norm);
+    if(top.num < length(var.nms)){
+        if(method.nm == 'tanova'){
+            if(GetGroupNumber(dataSet) == 2){
+                if(is.null(analSet$tt)){
+                    analSet <- Ttests.Anal(analSet, dataSet);
+                }
+                var.nms <- names(analSet$tt$p.value)[1:top.num];
+            }else{
+                if(is.null(analSet$aov)){
+                    analSet <- ANOVA.Anal(analSet, dataSet);
+                }
+                var.nms <- names(analSet$aov$p.value)[1:top.num];
+            }
+        # }else if(method.nm == 'cor'){
+            # if(is.null(analSet$cor.res)){
+                # analSet <- Match.Pattern(dataSet, analSet);
+            # }
+
+            # # re-order for pretty view
+            # cor.res <- analSet$cor.res;
+
+            # ord.inx<-order(cor.res[,3]);
+            # cor.res <- cor.res[ord.inx, ];
+
+            # ord.inx<-order(cor.res[,1]);
+            # cor.res <- cor.res[ord.inx, ];
+
+            # var.nms <- rownames(cor.res)[1:top.num];
+        }else if(method.nm == 'vip'){
+            if(is.null(analSet$plsda)){
+                analSet <- PLSR.Anal(dataSet, analSet);
+                analSet <- PLSDA.CV(dataSet, analSet);
+            }
+            var.nms <- rownames(analSet$plsda$vip.mat)[1:top.num];
+        }else if(method.nm == 'rf'){
+            if(is.null(analSet$rf)){
+                analSet <- RF.Anal(dataSet, analSet);
+            }
+            var.nms <- GetRFSigRowNames(analSet)[1:top.num];
+        }
+    }
+    var.inx <- match(var.nms, colnames(dataSet$norm));
+    analSet <- PlotHeatMap(dataSet, analSet, imgName, format, dpi, width, smplDist, clstDist, colors, viewOpt, rowV, colV, var.inx, border);
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+	invisible(analSet)
+}
+
+
+PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72, width=NA, smplDist, clstDist, colors, viewOpt="detail", rowV= TRUE, colV= TRUE, var.inx=NA, border=T){
+ 
+    # record the paramters
+    analSet$htmap<-list(dist.par=smplDist, clust.par=clstDist);
+    # set up data set
+    if(is.na(var.inx)){
+        hc.dat<-as.matrix(dataSet$norm);
+    }else{
+        hc.dat<-as.matrix(dataSet$norm[,var.inx]);
+    }
+    colnames(hc.dat)<-substr(colnames(hc.dat),1,18) # some names are too long
+    hc.cls <- dataSet$cls;
+
+    # set up colors for heatmap
+    if(colors=="gbr"){
+        colors <- colorRampcolors(c("green", "black", "red"), space="rgb")(256);
+    }else if(colors == "heat"){
+        colors <- heat.colors(256);
+    }else if(colors == "topo"){
+        colors <- topo.colors(256);
+    }else if(colors == "gray"){
+        colors <- colorRampcolors(c("grey90", "grey10"), space="rgb")(256);
+    }else{
+        suppressMessages(require(RColorBrewer));
+        colors <- rev(colorRampcolors(brewer.pal(10, "RdBu"))(256));
+    }
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+ 
+   if(viewOpt == "overview"){
+        if(is.na(width)){
+            w <- 9;
+        }else if(width == 0){
+            w <- 7.2;
+            imgSet$heatmap<<-imgName;
+        }else{
+            w <- 7.2;
+        }
+        h <- w;
+    }else{
+        if(is.na(width)){
+            minW <- 630;
+            myW <- nrow(hc.dat)*10 + 150;
+            if(myW < minW){
+                myW <- minW;
+            }   
+            w <- round(myW/72,2);
+        }else if(width == 0){
+            w <- 7.2;
+            imgSet$heatmap<<-imgName;
+        }else{
+            w <- 7.2;
+        }
+
+        if(ncol(hc.dat) > 50){
+            myH <- ncol(hc.dat)*12 + 40;
+        }else if(ncol(hc.dat) > 20){
+            myH <- ncol(hc.dat)*12 + 60;
+        }else{
+            myH <- ncol(hc.dat)*12 + 120;
+        }
+        h <- round(myH/72,2);
+    }
+
+    if(border){
+        border.col<-"grey60";
+    }else{
+        border.col <- NA;
+    }
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    if(dataSet$cls.type == "disc"){
+        require(pheatmap);
+        annotation <- data.frame(class= hc.cls);
+        rownames(annotation) <-rownames(hc.dat); 
+
+        # set up color schema for samples
+        if(colors== "gray"){
+            cols <- GetColorSchema(dataSet, T);
+            uniq.cols <- unique(cols);
+        }else{
+            cols <- GetColorSchema(dataSet);
+            uniq.cols <- unique(cols);
+        }
+        names(uniq.cols) <- unique(as.character(dataSet$cls));
+        ann_colors <- list(class= uniq.cols);
+
+        pheatmap(t(hc.dat), 
+            annotation=annotation, 
+            fontsize=8, fontsize_row=8, 
+            clustering_distance_rows = smplDist,
+            clustering_distance_cols = smplDist,
+            clustering_method = clstDist, 
+            border_color = border.col,
+            cluster_rows = colV, 
+            cluster_cols = rowV,
+            scale = 'row', 
+            color = colors,
+            annotation_colors = ann_colors
+            );
+    }else{
+        heatmap(hc.dat, Rowv = rowTree, Colv=colTree, col = colors, scale="column");
+    }
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+	invisible(analSet);
+}
+
+#' Plot two-factor heatmap
+#'
+#' Uses \code{\link[pheatmap]{pheatmap}} function.
+#' This method displays data in the form of colored cells. 
+#' It provides direct visualization of the relative levels of individual samples or variables.
+#' Each colored cell on the map corresponds to a concentration value in your data table, 
+#' with samples in rows and features/compounds in columns. 
+#' You can use heatmap to identify samples/features that are unusually high/low.
+#' @param dataSet
+#' @param analSet 
+#' @param smplDist The distance measure, one of \code{"euclidean"}, \code{"pearson"}, \code{"minkowski"}
+#' @param clstDist The agglomeration method to be used, one of "ward.D", "ward.D2", "single", "complete", "average".
+#' For details: \code{\link[pheatmap]{pheatmap}}
+#' @param colors The color contrast. One of \code{"default"}, \code{"gbr"} (red/green), \code{"heat"}, \code{"topo"}, \code{"gray"}
+#' @param viewOpt View mode, \code{"overview"} or \code{"detailed"}
+#' @param hiRes If \code{TRUE}, then produces hi-resolution plot.
+#' @param sortInx If \code{A}, samples are arranged by the first factor; if \code{B} - by the second one. 
+#' @param var.inx Vector of the numbers of plotted features.
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @return Native \code{analSet} with one added \code{$htmap2} element containing:
+#' \itemize{
+#' \item\code{$htmap2$dist.par} - equal \code{smplDist} argument value
+#' \item\code{$htmap2$clust.par} - equal \code{clstDist} argument value  
+#' }
+#' @export
+PlotHeatMap2<-function(dataSet, analSet, imgName="heatmap2_", format="png", dpi=72, width=NA, smplDist='pearson', clstDist='average', colors="bwm", viewOpt="overview", hiRes=FALSE, sortInx = 2, var.inx=1:ncol(dataSet$norm)){
+	match.arg(colors, c("gbr", "heat", "topo", "gray", "default"))
+	match.arg(smplDist, c("pearson", "euclidean", "minkowski"))
+	match.arg(clstDist, c("ward.D", "ward.D2", "single", "complete", "average"))
+	match.arg(viewOpt, c("overview", "detailed"))
+	match.arg(sortInx, c("A", "B"))
+    if(sortInx == A){
+        ordInx <- order(dataSet$facA, dataSet$facB);
+    }else{
+        ordInx <- order(dataSet$facB, dataSet$facA);
+    }
+
+    new.facA <- dataSet$facA[ordInx];
+    new.facB <- dataSet$facB[ordInx];
+
+    # set up data set. note, need to transpose the data for two way plotting
+    data <- dataSet$norm[ordInx, ];
+
+    hc.dat<-as.matrix(data);
+    colnames(hc.dat)<-substr(colnames(data), 1, 18) # some names are too long
+
+    # set up parameter for heatmap
+    suppressMessages(require(RColorBrewer));
+    if(colors=="gbr"){
+        colors <- colorRampcolors(c("green", "black", "red"), space="rgb")(256);
+    }else if(colors == "heat"){
+        colors <- heat.colors(256);
+    }else if(colors == "topo"){
+        colors <- topo.colors(256);
+    }else if(colors == "gray"){
+        colors <- colorRampcolors(c("grey90", "grey10"), space="rgb")(256);
+    }else{
+        colors <- rev(colorRampcolors(brewer.pal(10, "RdBu"))(256));
+    }
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(viewOpt == "overview"){
+        if(is.na(width)){
+            w <- 9;
+        }else if(width == 0){
+            w <- 7.2;
+            imgSet$heatmap<<-imgName;
+        }else{
+            w <- 7.2;
+        }
+        h <- w;
+    }else{
+        if(is.na(width)){
+            minW <- 650;
+            myW <- nrow(hc.dat)*11 + 150;
+            if(myW < minW){
+                myW <- minW;
+            }   
+            w <- round(myW/72,2);
+        }else if(width == 0){
+            w <- 7.2;
+            imgSet$heatmap<<-imgName;
+        }else{
+            w <- 7.2;
+        }
+        if(ncol(hc.dat) > 50){
+            myH <- ncol(hc.dat)*12 + 40;
+        }else if(ncol(hc.dat) > 20){
+            myH <- ncol(hc.dat)*12 + 60;
+        }else{
+            myH <- ncol(hc.dat)*12 + 120;
+        }
+        h <- round(myH/72,2);
+    }
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    require(pheatmap);
+    annotation <- data.frame(Fac1=new.facA, Fac2=new.facB);
+    rownames(annotation) <-rownames(hc.dat); 
+
+    pheatmap(t(hc.dat), 
+            annotation=annotation, 
+            fontsize=8, fontsize_row=8, 
+            clustering_distance_rows = smplDist,
+            clustering_distance_cols = smplDist,
+            clustering_method = clstDist, 
+            cluster_rows = TRUE, 
+            cluster_cols = FALSE,
+            scale = 'row', 
+            color = colors);
+    dev.off();
+    analSet$htmap2<-list(dist.par=smplDist, clust.par=clstDist);
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+	invisible(analSet);
+}

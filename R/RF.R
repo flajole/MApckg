@@ -1,0 +1,213 @@
+#' Random Forests
+#'
+#' Perform Random Forest analysis. Uses \code{\link[randomForest]{randomForest}} function.
+#' Writes results to \code{"randomforests_sigfeatures.csv"} file.
+#'
+#' @param dataSet
+#' @param analSet
+#' @param treeNum Number of trees to grow.
+#' @param tryNum Number of predictors to try for each node.
+#' @return Native \code{analSet} with two added elements:
+#' \itemize{
+#' \item\code{$rf} - standard \code{\link[randomForest]{randomForest}} function output
+#' \item\code{$rf.sigmat} - matrix of features significance (sorted by MeanDecreaseAccuracy).  
+#' }
+#' @export
+# random forests
+RF.Anal<-function(dataSet, analSet, treeNum=500, tryNum=10){
+    suppressMessages(require(randomForest));
+    rf_out<-randomForest(dataSet$norm, dataSet$cls, ntree = treeNum, mtry = tryNum, importance = TRUE, proximity = TRUE);
+
+    # set up named sig table for display
+    impmat<-rf_out$importance;
+    impmat<-impmat[rev(order(impmat[,"MeanDecreaseAccuracy"])),]
+    sigmat<-impmat[,"MeanDecreaseAccuracy", drop=F];
+    sigmat<-signif(sigmat, 5);
+
+    write.csv(sigmat,file="randomforests_sigfeatures.csv");
+    analSet$rf<-rf_out;
+    analSet$rf.sigmat<-sigmat;
+	return(analSet);
+}
+
+
+#' Plot Random Forest
+#'
+#' Set of functions for plotting the results of Random Forest analysis.
+#'
+#' @param dataSet
+#' @param analSet 
+#' @param imgName Image file name prefix.
+#' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
+#' @param dpi Image resolution.
+#' @param width Image width.
+#' @name PlotRF
+NULL
+
+#' \code{PlotRF.Classification} - plot feature classification.
+#' @rdname PlotRF
+#' @export
+# plot variable importance ranked by MeanDecreaseAccuracy
+PlotRF.Classification<-function(dataSet, analSet, imgName="rf_cls_", format="png", dpi=72, width=NA){
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 8;
+        imgSet$rf.cls<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*5/8;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    #par(mfrow=c(2,1));
+    par(mar=c(4,4,3,2));
+    cols <- rainbow(length(levels(dataSet$cls))+1);
+    plot(analSet$rf, main="Random Forest classification", col=cols);
+    legend("topright", legend = c("Overall", levels(dataSet$cls)), lty=2, lwd=1, col=cols);
+
+    #PlotConfusion(analSet$rf$confusion);
+    
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotRF.VIP} - plot variable importance of features ranked by their contributions to classification accuracy (MeanDecreaseAccuracy).
+#' @rdname PlotRF
+#' @export
+# plot variable importance ranked by MeanDecreaseAccuracy
+PlotRF.VIP<-function(dataSet, analSet, imgName="rf_imp_", format="png", dpi=72, width=NA){
+	vip.score <- rev(sort(analSet$rf$importance[,"MeanDecreaseAccuracy"]));
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 8;
+    }else if(width == 0){
+        w <- 7;
+        imgSet$rf.imp<<-imgName;
+    }else{
+        w <- width;    
+    }
+    h <- w*7/8;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    PlotImpVar(dataSet, vip.score,"MeanDecreaseAccuracy");
+	dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+#' \code{PlotRF.Outlier} - plot outlying measures, only top 5 potential outliers are labeled.
+#' @rdname PlotRF
+#' @export
+PlotRF.Outlier<-function(dataSet, analSet, imgName="rf_outiler_", format="png", dpi=72, width=NA){
+
+    cols <- GetColorSchema(dataSet);
+    uniq.cols <- unique(cols);
+    legend.nm <- unique(as.character(dataSet$cls));
+    dist.res <- outlier(analSet$rf);
+
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
+    if(is.na(width)){
+        w <- 9;
+    }else if(width == 0){
+        w <- 7.2;
+        imgSet$rf.outlier<<-imgName;
+    }else{
+        w <- width;
+    }
+    h <- w*7/9;
+
+    Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
+    layout(matrix(c(1,2), 1, 2, byrow = TRUE), width=c(4,1));
+
+    op<-par(mar=c(5,5,4,0));
+    plot(dist.res, type="h", col=cols, xlab="Samples", xaxt="n", ylab="Outlying Measures", bty="n");
+
+    # add sample names to top 5
+    rankres <- rank(-abs(dist.res), ties.method="random");
+
+    inx.x <- which(rankres < 6);
+    inx.y <- dist.res[inx.x];
+    nms <- names(dist.res)[inx.x];
+    text(inx.x, inx.y, nms, pos=ifelse(inx.y >= 0, 3, 1), xpd=T)
+ 	op<-par(mar=c(5,0,4,1));
+    plot.new();
+    plot.window(c(0,1), c(0,1));
+
+    legend("center", legend =legend.nm, pch=15, col=uniq.cols);
+
+    dev.off();
+	frame()
+	grid::grid.raster(png::readPNG(imgName));
+}
+
+# get the OOB error for the last signif
+GetRFOOB<-function(analSet){
+    errors = analSet$rf$err.rate;
+    nrow = dim(errors)[1];
+    signif(errors[nrow, 1],3);
+}
+
+GetSigTable.RF<-function(analSet){
+    GetSigTable(analSet$rf.sigmat, "Random Forest");
+}
+
+# significance measure, double[][]
+GetRFSigMat<-function(analSet){
+    return(CleanNumber(analSet$rf.sigmat))
+}
+
+GetRFSigRowNames<-function(analSet){
+    rownames(analSet$rf.sigmat);
+}
+
+GetRFSigColNames<-function(analSet){
+    colnames(analSet$rf.sigmat);
+}
+
+GetRFConf.Table<-function(analSet){
+     print(xtable(analSet$rf$confusion, 
+        caption="Random Forest Classification Performance"), size="\\scriptsize");
+}
+
+# return double[][] confusion matrix
+GetRFConfMat<-function(analSet){
+	signif(analSet$rf$confusion,3);
+}
+
+GetRFConfRowNames<-function(analSet){
+	rownames(analSet$rf$confusion);
+}
+
+GetRFConfColNames<-function(analSet){
+	colnames(analSet$rf$confusion);
+}
+
+
+PlotConfusion <- function(clsConf){
+    prior(clsConf) <- 100 
+    # The above rescales the confusion matrix such that columns sum to 100.
+    opar <- par(mar=c(5.1, 6.1, 2, 2))
+    x <- x.orig <- unclass(clsConf)
+    x <- log(x + 0.5) * 2.33
+    x[x < 0] <- NA
+    x[x > 10] <- 10
+    diag(x) <- -diag(x)
+    image(1:ncol(x), 1:ncol(x),
+        -(x[, nrow(x):1]), xlab='Actual', ylab='',
+        col=colorRampPalette(c(hsv(h = 0, s = 0.9, v = 0.9, alpha = 1), 
+                             hsv(h = 0, s = 0, v = 0.9, alpha = 1), 
+                             hsv(h = 2/6, s = 0.9, v = 0.9, alpha = 1)))(41), 
+        xaxt='n', yaxt='n', zlim=c(-10, 10))
+    axis(1, at=1:ncol(x), labels=colnames(x), cex.axis=0.8)
+    axis(2, at=ncol(x):1, labels=colnames(x), las=1, cex.axis=0.8)
+    title(ylab='Predicted', line=4.5)
+    abline(h = 0:ncol(x) + 0.5, col = 'gray')
+    abline(v = 0:ncol(x) + 0.5, col = 'gray')
+    text(1:6, rep(6:1, each=6), labels = sub('^0$', '', round(c(x.orig), 0)))
+    box(lwd=2)
+    par(opar) # reset par
+}
