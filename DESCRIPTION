@@ -2,3 +2,5 @@ Package: MApckg
 Version: 0.1
 Suggests: knitr
 VignetteBuilder: knitr
+URL: http://github.com/flajole/MApckg
+BugReports: http://github.com/flajole/MApckg/issues
