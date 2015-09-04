@@ -1,0 +1,195 @@
+---
+title: "Template scripts for MApckg"
+author: "Dmitry Zubkov"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Below you see the R code script which you can easily copy-paste and vary according to your own needs (read comments for the details).
+
+
+```r
+#-------------------------------------------------------------------------
+
+# If you have QI output which is needed to be converted
+# use MQI_to_MA for metabolites or lipids
+MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
+          abundance = "Normalised", 
+          facNames = NULL, 
+          unite_neg_pos = TRUE)
+
+# OR you can change arguments
+# 1) if you want raw data:
+# # abundance = "Raw"
+
+# 2) if you don't want to merge pos and neg files:
+# # unite_neg_pos = FALSE 
+
+# 3) if you would like to specify names of grouping factors (choose your own!):
+# # facNames = c("Species", "Phenotype", "Treatment") 
+
+MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
+          abundance = "Raw", 
+          facNames = c("Species", "Phenotype", "Treatment"), 
+          unite_neg_pos = FALSE)
+
+#-------------------------------------------------------------------------
+
+# If you have QI output which is needed to be converted
+# use PQI_to_MA for proteins
+PQI_to_MA(directory = getwd(),
+          abundance = "Normalised",
+          facNames  = NULL,
+          proteinID = "shortDescription")
+
+# OR you can change arguments
+# 1) if you want raw data:
+# # abundance = "Raw"
+
+# 2) if you want tp get proteinID from "Acession" column 
+# #   or from "Description" column without cutting the end of ID 
+# # proteinID = "Accession"
+# # OR
+# # proteinID = "Description" 
+ 
+# 3) if you would like to specify names of grouping factors (choose your own!):
+# # facNames = c("Species", "Phenotype", "Treatment") 
+
+MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
+          abundance = "Raw", 
+          facNames = c("Species", "Phenotype", "Treatment"),
+          proteinID = "Accession")
+          
+          
+#-------------------------------------------------------------------------
+
+
+# ALWAYS revise the resulting table!!!
+
+
+#-------------------------------------------------------------------------
+
+# Choose one of
+# # 1) if you have a single table like the one generated at the previous step
+# # change the path to your own
+# # don't forget to change the number of lines with sample data if necessary
+msdata <- MSupload("/the_path_to_your_table/qi_to_ma_table.csv",
+                   sampleDataLines = 3,
+                   orientation = "SamplesInCol"))
+
+ 
+# # 2) if your data are separated into three files
+# # change the path to your own
+# # dont's forget to switch the orientation if you have samples
+# # in rows in the intensity matrix (orientation = "SamplesInRow")
+msdata <- MSupload(list(intFile     = "/the_path/intensity_matrix.csv",
+                        sampleFile  = "/the_path/sample_list.csv",
+                        peakFile    = "/the_path/peak_list.csv"),
+                   orientation = "SamplesInCol")
+
+#-------------------------------------------------------------------------
+
+# Choose one of (don't forget to change factor names to your own):
+# # 1) for one-factored data
+dataSet <- MSdata_to_MA(msdata, designType = "regular", 
+                        facA = "Phenotype")
+# # 2) for two-factored data
+dataSet <- MSdata_to_MA(msdata, designType = "regular", 
+                        facA = "Phenotype", facB = "Treatment")
+# # 3) for time-series data
+dataSet <- MSdata_to_MA(msdata, designType = "time",
+                        facA = "Phenotype", facB = "Time")
+
+
+#-------------------------------------------------------------------------
+
+# Use always
+analSet  <- list()
+
+#-------------------------------------------------------------------------
+# One-factored data, any number of groups
+
+# # Statistics
+analSet <- PCA.Anal(dataSet, analSet)
+analSet <- PCA.Loadings(dataSet, analSet)
+analSet <- PLS.Anal(dataSet, analSet)
+analSet <- PLS.Loadings(dataSet, analSet)
+analSet <- Kmeans.Anal(dataSet, analSet)
+analSet <- SOM.Anal(dataSet, analSet)
+analSet <- RF.Anal(dataSet, analSet)
+analSet <- SAM.Anal(dataSet, analSet)
+analSet <- SetSAMSigMat(dataSet, analSet)
+# # # Here you have to specify the name of the feature 
+analSet <- FeatureCorrelation(dataSet, analSet, varName = "feature_1")
+# # # Here you have to specify the pattern
+analSet <- Match.Pattern(dataSet, analSet, pattern = "1-2-3-4")
+
+# # Plotting the results
+PlotPCA2DScore(dataSet, analSet)
+PlotPCABiplot(dataSet, analSet)
+PlotPCALoadings(dataSet, analSet)
+PlotPLS2DScore(dataSet, analSet)
+PlotPLS.Classification(dataSet, analSet)
+PlotPLS.Permutation(dataSet, analSet)
+PlotPLSLoading(dataSet, analSet)
+PlotCorr(dataSet, analSet)
+PlotKmeans(dataSet, analSet)
+PlotSOM(dataSet, analSet)
+PlotRF.Classification(dataSet, analSet)
+PlotRF.VIP(dataSet, analSet)
+PlotRF.Outlier(dataSet, analSet)
+PlotSAM.FDR(dataSet, analSet)
+PlotSAM.Cmpd(dataSet, analSet)
+
+# # Plots for which preliminarly analysis is not necessary
+PlotCorrHeatMap(dataSet, analSet)
+analSet <- PlotHCTree(dataSet, analSet)
+analSet <- PlotSubHeatMap(dataSet, analSet)
+
+#-----------------------------------------------------------------------------
+# One-factored data, two groups only
+
+# # Statistics
+# # # NB: don't perform FC or Volcano on transformed or rescaled data sets, it's senseless!
+analSet <- FC.Anal(dataSet, analSet) 
+analSet <- Volcano.Anal(dataSet, analSet)     
+analSet <- Ttests.Anal(dataSet, analSet)
+analSet <- RSVM.Anal(dataSet, analSet)
+analSet <- EBAM.A0.Anal(dataSet, analSet)
+analSet <- EBAM.Cmpd.Anal(dataSet, analSet)
+analSet <- SetEBAMSigMat(dataSet, analSet)
+
+# # Plotting the results
+PlotTT(dataSet, analSet)
+PlotFC(dataSet, analSet)
+PlotVolcano(dataSet, analSet)
+PlotRSVM.Classification(dataSet, analSet)
+PlotRSVM.Cmpd(dataSet, analSet)
+PlotEBAM.A0(dataSet, analSet)
+PlotEDAM.Cmpd(dataSet, analSet)
+
+#-----------------------------------------------------------------------------
+# One-factored data, multiple groups only
+
+# # Statistics
+analSet <- ANOVA.Anal(dataSet, analSet)
+
+# # Plotting the results
+PlotANOVA(dataSet, analSet)
+
+#-----------------------------------------------------------------------------
+# Two-factored and time-series data
+
+# # Statistics
+analSet <- ANOVA2.Anal(dataSet, analSet)
+
+# # Plotting the results
+PlotANOVA2(dataSet, analSet)
+
+# # Plots for which preliminarly analysis is not necessary
+analSet <- PlotHeatMap2(dataSet, analSet)
+```

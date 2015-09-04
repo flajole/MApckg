@@ -1,7 +1,8 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
+title: "MApckg tutorial"
+author: "Dmitry Zubkov"
 date: "`r Sys.Date()`"
+layout: default
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
@@ -9,62 +10,128 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
 
-## Vignette Info
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+# MSdata and MApckg for Giavalisco's lab
+These packages are created to make your life easier. However, life have to become more complicated sometimes to become easier at the end. Please, be patient. So am I.
 
-## Styles
+## The pipeline
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+**Step 0.** Preparations.
 
-## Figures
+**Step 1.** Converting QI output to nice table.
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
+**Step 2.** Uploading the data.
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+**Step 3.** Pre-processing.
+
+**Step 4.** Exporting to MApckg format. 
+
+**Step 5.** Statistical analysis.
+
+**Step 6.** Plotting.
+ 
+## Step 0. Preparations.
+* Install R.
+* Install all the packages necessary for MetaboAnalyst. Use this command:
+```r
+install.packages(c("netcdf", "imagemagick", "graphviz", "Rserve", "ellipse", "scatterplot3d","pls", "caret", "multicore", "lattice", "Cairo", "randomForest", "e1071","gplots", "som", "xtable", "RColorBrewer", "xcms","impute", "pcaMethods","siggenes", "globaltest", "GlobalAncova", "Rgraphviz","KEGGgraph", "preprocessCore", "genefilter", "pheatmap", "igraph", "RJSONIO", "SSPA", "caTools", "ROCR", "pROC"))
+```
+* Download two of my packages and install them (use your own file paths to downloaded archive files):
+```r
+install.packages("C:/R/MApckg.tar.gz", repos=NULL, type="source")
+install.packages("C:/R/MSdata.tar.gz", repos=NULL, type="source")
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+* Attach the packages in R.
+```r
+require(MApckg, MSdata)
 ```
 
-Also a quote using `>`:
+## Step 1. Converting QI output to a nice table
+Use `PQI_to_MA` function for proteome QI data.
+Use `MQI_to_MA` function for metabolome or lipidome QI data.
+You can open the function documentation containing the description of all the parameters and examples of usage by this command:
+```r
+?MQI_to_MA
+```
+The auto-recognition of grouping factors is implemented now. For this matter group labels should be standardized in this way:
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+    `GroupingFactor1_GroupingFactor2_ GroupingFactor3_etc...`
 
-| Right | Left | Default | Center |
-|------:|:-----|---------|:------:|
-|   12  |  12  |    12   |    12  |
-|  123  |  123 |   123   |   123  |
-|    1  |    1 |     1   |     1  |
+For example:
+
+    `WT_C_0; WT_T_0; WT_C_1; WT_T_1; Mut_C_0; Mut_T_0; Mut_C_1; Mut_T_1`
+
+Where the first factor is phenotype (wild type or mutant); the second one is control/treatment; the third one is whatever else marker 1 or 0.
+The program doesn't care about the actual meaning of all these labels! So just keep the order of factors the same.
+
+There could be any number of factors. But if you have a lot of important sample information (for instance, more than 3 factors) it could be inconvenient to type it all. In that case you may just ignore grouping labels and use another option – three separate tables with intensity matrix, sample and peak data (**see below**).
+
+By default if there is only one factor, it is automatically called `"Group"`. In all the other cases factors are called just `"Factor1"`, `"Factor2"`, etc. You can always change the factor names manually in the resulting table, or just set them in the function call:
+```r
+	MQI_to_MA("C:/QI_data", 
+	facNames = c("Species", "Phenotype", "Treatment", "Time"))
+```
+
+(For this example grouping labels should look like `Species_Phenotype_Treatment_Time`)
+
+Please, always revise the resulting table in case if something went wrong!
+
+## Step 2. Uploading the data
+As for now, there are two options.
+
+1. You have a table with:
+* identifier of the peak/chemical in the first column; 
+* identifier of the sample in the first row; 
+* any number of grouping factors below the sample row;
+* looking like:
 
 
-| Sample  |  Phenotype |	Time |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **Sample** | **S1T0** | **S1T1** | **S1T2** | **S2T0** | **S2T1** | **S2T2** | **S3T0** | **S3T1** | **S3T2** | **S4T0** | **S4T1** | **S4T2** |
+| **Phenotype** | **WT** | **WT** | **WT** | **WT** | **WT** | **WT** | **MT** | **MT** | **MT** | **MT** | **MT** | **MT** |
+| **Time** | **0** | **1** | **2** | **0** | **1** | **2** | **0** | **1** | **2** | **0** | **1** | **2** |
+| **0.4425/385** | 126.39 | 234.11 | 162.68 | 172.44 | 171.53 | 180.31 | 140.23 | 157.38 | 124.62 | 147.23 | 165.29 | 125.85 |
+| **0.4498/625** | 108.9 | 133.53 | 128.66 | 121.48 | 112.23 | 142.97 | 120.1 | 69.85 | 65.75 | 121.22 | 70.04 | 76.06 |
+| **0.4711/463** | 124.1 | 166.84 | 156.18 | 158.4 | 190.09 | 152.89 | 102.94 | 67.11 | 83.99 | 110.09 | 98.61 | 77.91 |
+| **0.4715/659** | 688.13 | 739.41 | 529.62 | 828.48 | 660.76 | 545.32 | 289.67 | 359.43 | 240.13 | 314.71 | 338.43 | 203.29 |
+| **0.4766/757** | 117.8 | 110.31 | 114.56 | 144.39 | 155.33 | 114.47 | 80.53 | 84.3 | 42.33 | 73.74 | 97.78 | 58 |
+| **0.4772/675** | 182.72 | 209.42 | 144.61 | 255.9 | 199.4 | 179.54 | 112.55 | 112 | 68.97 | 93.07 | 114.11 | 67.45 |
+
+In this case you can use `MSupload` function, setting up `sampleDataLines` argument to the number of rows with information about samples (3 for the table above). Change orientation of intensity matrix to `"SamplesInRow"`, if necessary.
+```r
+msdata <- MSupload("qi_to_ma_table.csv",
+				sampleDataLines = 3,
+				orientation = "SamplesInCol"))
+```
+2. You have three separate tables containing:
+* concentration/intensity matrix
+* peak information
+* sample information
+
+|  | S1T0 | S1T1 | S1T2 | S2T0 | S2T1 | S2T2 | S3T0 | S3T1 | S3T2 | S4T0 | S4T1 | S4T2 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **3.8425/227** | 126.39 | 234.11 | 162.68 | 172.44 | 171.53 | 180.31 | 140.23 | 157.38 | 124.62 | 147.23 | 165.29 | 125.85 |
+| **4.6982/255** | 108.9 | 133.53 | 128.66 | 121.48 | 112.23 | 142.97 | 120.1 | 69.85 | 65.75 | 121.22 | 70.04 | 76.06 |
+| **4.0353/253** | 124.1 | 166.84 | 156.18 | 158.4 | 190.09 | 152.89 | 102.94 | 67.11 | 83.99 | 110.09 | 98.61 | 77.91 |
+| **4.8775/281** | 688.13 | 739.41 | 529.62 | 828.48 | 660.76 | 545.32 | 289.67 | 359.43 | 240.13 | 314.71 | 338.43 | 203.29 |
+| **4.2972/279** | 117.8 | 110.31 | 114.56 | 144.39 | 155.33 | 114.47 | 80.53 | 84.3 | 42.33 | 73.74 | 97.78 | 58 |
+| **7.9686/339** | 182.72 | 209.42 | 144.61 | 255.9 | 199.4 | 179.54 | 112.55 | 112 | 68.97 | 93.07 | 114.11 | 67.45 |
+
+
+| Compound | m/z | Retention time (min) | Accepted Compound ID | Mass Error (ppm) | Retention Time Error (mins) |
+| --- | --- | --- | --- | --- | --- |
+| 3.8425/227 | 227.2032461 | 3.842533333 | FA 14:0 | 6.978613272 | -0.007466667 |
+| 4.6982/255 | 255.2317043 | 4.6982 | FA 16:0 | -4.87551823 | -0.0518 |
+| 4.0353/253 | 253.2197448 | 4.035366667 | FA 16:1 | 9.602793153 | -0.064633333 |
+| 4.8775/281 | 281.2483506 | 4.877583333 | FA 18:1 | -0.896403039 | -0.022416667 |
+| 4.2972/279 | 279.232409 | 4.297216667 | FA 18:2 | -1.943224345 | -0.102783333 |
+| 7.9686/339 | 339.3294283 | 7.968666667 | FA 22:0 | 7.565338681 | 0.018666667 |
+
+| Sample  |  Phenotype |    Time |
 |-------|----------|-------|
 | S1T0 |	WT |	0 |
 | S1T1 |	WT |	1 |
@@ -79,3 +146,206 @@ Also a quote using `>`:
 | S4T1 |	MT |	1 |
 | S4T2 |	MT |	2 |
 
+In this case you can use `MSupload` function in this way, changing file paths to your own. Change orientation of intensity matrix to `"SamplesInRow"`, if necessary. If there is no sample data file or peak data file, just set the file path to empty string `sampleFile = ""`.
+```r
+msdata <- MSupload(object = list(intFile = "intensity_matrix.csv",
+						sampleFile = "sample_list.csv",
+						peakFile = "peak_list.csv"),
+				orientation = "SamplesInCol")
+```
+
+## Step 3. Pre-processing
+So, now you have object msdata. You can look through what's inside using these functions:
+```r
+intMatrix(msdata) 	# Look at the intensity table.
+sampleData(msdata)	# Look at the samples metadata.
+peakData(msdata)		# Look at the peaks metadata.
+```
+Now you can apply different types of normalization/filtering/retention indexing/etc.
+A LOT OF FABULOUS STUFF WILL BE HERE
+
+## Step 4. Export to MetaboAnalysis
+You should use `MSdata_to_MA` function. Examples of usage: 
+* One-factored data
+```r
+dataSet <- MSdata_to_MA(msdata, designType = "regular", 
+		facA = "Phenotype")
+```
+* Two-factored data
+```r
+dataSet <- MSdata_to_MA(msdata, designType = "regular", 
+		facA = "Phenotype", facB = "Treatment")
+```
+* Time-series data
+```r
+    dataSet <- MSdata_to_MA(msdata, designType = "time",
+    facA = "Phenotype", facB = "Time")
+```
+
+Instead of `"Phenotype"` or `"Treatment"`, of course, there could be any grouping factors from your sample metadata. (Kindly reminder: use `sampleData(msdata)` command to check it.)
+
+Also, create an empty object for storing the analysis results:
+
+	`analSet <- list()`
+
+## Step 5. Statistical analysis
+REMEMBER: you always can read about different statistics, their outputs and etc. in detail in MetaboAnalyst tutorial. Just open the file and use Ctrl+F.
+
+You can always check the list of all statistical stuff you have done by the moment:
+```r
+	str(analSet, max.level = 1)
+```
+To see the description of function, the list of all possible arguments and the default values of these arguments, use the command '?FunctionName' like:
+```r
+    ?ANOVA.Anal
+```
+
+Try it. You will see something like this:
+```r
+	ANOVA.Anal(	dataSet, 
+			analSet, 
+			nonpar = FALSE,
+			thresh = 0.05, 
+			post.hoc = "fisher")
+```
+That's the function with the list of arguments and their default values. Below you will see detailed description, what each parameter means:
+
+`nonpar`	If `FALSE` - use classical ANOVA; if `TRUE` - Kruskal Wallis Test
+`thresh`	Threshold of significance.
+`post.hoc`	Post-hoc statistics: `"tukey"` or `"fisher"`
+
+All the function calls listed below use the default arguments, and their look like:
+```r
+	analSet <- ANOVA.Anal(dataSet, analSet)
+```
+
+If you would like to use function with non-default parameters, just list these parameters too:
+```r
+	analSet <- ANOVA.Anal(dataSet, analSet, nonpar = TRUE, 
+					thresh = 0.01, post.hoc = "tukey")
+```
+
+### One-factored data, any number of groups
+* Multivariate Analysis: Principal Component Analysis (PCA)
+```r
+analSet <- PCA.Anal(dataSet, analSet)
+analSet <- PCA.Loadings(dataSet, analSet)
+PlotPCA2DScore(dataSet, analSet)
+PlotPCABiplot(dataSet, analSet)
+PlotPCALoadings(dataSet, analSet)
+```
+* Multivariate Analysis: Partial Least Squares - Discriminant Analysis (PLS-DA)
+```r
+analSet <- PLS.Anal(dataSet, analSet)
+analSet <- PLS.Loadings(dataSet, analSet)
+PlotPLS2DScore(dataSet, analSet)
+PlotPLS.Classification(dataSet, analSet)
+PlotPLS.Permutation(dataSet, analSet)
+PlotPLSLoading(dataSet, analSet)
+```
+* Univariate Analysis: Correlation Analysis
+```r
+PlotCorrHeatMap(dataSet, analSet)
+```
+* Univariate Analysis: Pattern Searching and Correlations against single feature
+```r
+# Here you have to specify the name of the feature or pattern
+analSet <- FeatureCorrelation(dataSet, analSet, varName = "")
+analSet <- Match.Pattern(dataSet, analSet, pattern = "1-2-3-4")
+PlotCorr(dataSet, analSet)
+```
+* Partitional Clustering: K-means
+```r
+analSet <- Kmeans.Anal(dataSet, analSet)
+PlotKmeans(dataSet, analSet)
+```
+* Partitional Clustering: Self Organizing Map (SOM)
+```r
+analSet <- SOM.Anal(dataSet, analSet)
+PlotSOM(dataSet, analSet)
+```
+* Hierarchical Clustering: Dendrogram
+```r
+analSet <- PlotHCTree(dataSet, analSet)
+```
+* Hierarchical Clustering: Heatmaps
+```r
+analSet <- PlotSubHeatMap(dataSet, analSet)
+```
+* Classification & Feature Selection: Random Forest
+```r
+analSet <- RF.Anal(dataSet, analSet)
+PlotRF.Classification(dataSet, analSet)
+PlotRF.VIP(dataSet, analSet)
+PlotRF.Outlier(dataSet, analSet)
+```
+* Significant Feature Identification: Significance Analysis of Microarray (SAM)
+```r
+analSet <- SAM.Anal(dataSet, analSet)
+analSet <- SetSAMSigMat(dataSet, analSet)
+PlotSAM.FDR(dataSet, analSet)
+PlotSAM.Cmpd(dataSet, analSet)
+```
+### One-factored data, two groups only
+* Univariate Analysis: T-tests
+```r
+analSet <- Ttests.Anal(dataSet, analSet)
+PlotTT(dataSet, analSet)
+```
+* Univariate Analysis: Fold Change Analysis
+```r
+# NB: don't perform FC on transformed or 
+# rescaled data sets, it's senseless!
+analSet <- FC.Anal(dataSet, analSet) 	
+PlotFC(dataSet, analSet)
+```
+* Univariate Analysis: Volcano Plot
+```r
+# NB: don't perform Volcano on transformed or
+# rescaled data sets, it's senseless!
+analSet <- Volcano.Anal(dataSet, analSet) 	
+PlotVolcano(dataSet, analSet)
+```
+* Classification & Feature Selection: Support Vector Machine (SVM)
+```r
+analSet <- RSVM.Anal(dataSet, analSet)
+PlotRSVM.Classification(dataSet, analSet)
+PlotRSVM.Cmpd(dataSet, analSet)
+```
+* Significant Feature Identification: Empirical Bayesian Analysis of Microarray (EBAM)
+```r
+analSet <- EBAM.A0.Anal(dataSet, analSet)
+analSet <- EBAM.Cmpd.Anal(dataSet, analSet)
+analSet <- SetEBAMSigMat(dataSet, analSet)
+PlotEBAM.A0(dataSet, analSet)
+PlotEDAM.Cmpd(dataSet, analSet)
+```
+
+### One-factored data, multiple groups only
+* One-way Analysis of Variance (ANOVA)
+```r
+analSet <- ANOVA.Anal(dataSet, analSet)
+PlotANOVA(dataSet, analSet)
+```
+### Two-factored and time-series data
+* Univariate analysis: Two-way ANOVA
+```r
+analSet <- ANOVA2.Anal(dataSet, analSet)
+PlotANOVA2(dataSet, analSet)
+```
+* Heatmap visualisation
+```r
+analSet <- PlotHeatMap2(dataSet, analSet)
+```
+
+## Step 6. Plotting
+Plotting functions are meant above just after corresponding analytical function. However, actually, you can perform all the planned statistical analysis at once – just copy-paste necessary lines from the set of scripts.
+
+Then, if you are interested in looking at particular plots, you can use corresponding functions one by one.
+
+Otherwise, if you don't need to look at images in real-time, you could just copy-paste plotting functions too, and all the image files will be created at the same time.
+
+## Template Script
+See attached file Template_scripts.Rmd
+
+The best way is to look through the script and create your own one by choosing options, deleting unnecessary lines and setting all the parameters up.
