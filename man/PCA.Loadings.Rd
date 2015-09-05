@@ -7,6 +7,8 @@
 PCA.Loadings(dataSet, analSet, inx1 = 1, inx2 = 2)
 }
 \arguments{
+\item{dataSet}{}
+
 \item{analSet}{}
 
 \item{inx1,inx2}{The order numbers of PCs.}

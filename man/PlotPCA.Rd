@@ -51,10 +51,6 @@ PlotPCALoadings(dataSet, analSet, imgName = "pca_loading_", format = "png",
 \item{grey.scale}{If \code{TRUE} then plot is colored in 50 shades of gray.}
 
 \item{plotType}{\code{"scatter"} for scatter plot or \code{"boxplot"} for box plot}
-
-\item{inx1,inx2}{The order numbers of PCs.}
-
-\item{show}{If \code{TRUE} then points at the plot are labeled.}
 }
 \description{
 Set of functions for plotting the results of PCA.

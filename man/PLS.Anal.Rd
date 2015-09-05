@@ -3,7 +3,7 @@
 \name{PLS.Anal}
 \alias{PLS.Anal}
 \title{PLS analysis
-Uses \code{\link[pls]{'oscorespls'}} method of \code{\link[pls]{plsr}} function .
+Uses \code{"oscorespls"} method of \code{\link[pls]{plsr}} function .
 Writes two output files: \code{"pls_score.csv"} and \code{"pls_loadings.csv"}.
 Adds \code{analSet$pls} element with \code{\link[pls]{plsr}} function output.}
 \usage{
@@ -19,7 +19,7 @@ Native \code{analSet} with one added \code{$plsr} element containing \code{\link
 }
 \description{
 PLS analysis
-Uses \code{\link[pls]{'oscorespls'}} method of \code{\link[pls]{plsr}} function .
+Uses \code{"oscorespls"} method of \code{\link[pls]{plsr}} function .
 Writes two output files: \code{"pls_score.csv"} and \code{"pls_loadings.csv"}.
 Adds \code{analSet$pls} element with \code{\link[pls]{plsr}} function output.
 }

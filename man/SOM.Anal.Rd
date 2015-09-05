@@ -12,6 +12,10 @@ SOM.Anal(dataSet, analSet, x.dim = 1, y.dim = 3, initMethod = "linear",
 
 \item{analSet}{}
 
+\item{x.dim}{An integer specifying the x-dimension of the map.}
+
+\item{y.dim}{An integer specifying the y-dimension of the map.}
+
 \item{initMethod}{A character string specifying the initializing method.
 The following are permitted: \code{"sample"} uses a random sample from the data;
 \code{"random"} uses random draws from N(0,1);
@@ -19,10 +23,6 @@ The following are permitted: \code{"sample"} uses a random sample from the data;
 
 \item{neigb}{A character string specifying the neighborhood function type.
 The following are permitted: \code{"bubble"}, \code{"gaussian"}}
-
-\item{xdim}{An integer specifying the x-dimension of the map.}
-
-\item{ydim}{An integer specifying the y-dimension of the map.}
 }
 \value{
 Native \code{analSet} with one added \code{$som} element containing

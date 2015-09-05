@@ -4,9 +4,11 @@
 \alias{SetSAMSigMat}
 \title{SAM matrix of significance}
 \usage{
-SetSAMSigMat(analSet, delta = 1.3)
+SetSAMSigMat(dataSet, analSet, delta = 1.3)
 }
 \arguments{
+\item{dataSet}{}
+
 \item{analSet}{}
 
 \item{delta}{The delta to control FDR}

@@ -15,7 +15,7 @@ SAM.Anal(dataSet, analSet, method = "d.stat", paired = FALSE,
 \item{method}{A character string or a name specifying the method/function that
 should be used in the computation of the expression scores d.
 If \code{"d.stat"}, a modified t-statistic or F-statistic, respectively, will be computed as proposed by Tusher et al. (2001).
-If \cpde{"wilc.stat"}, a Wilcoxon rank sum statistic or Wilcoxon signed rank statistic will be used as expression score.}
+If \code{"wilc.stat"}, a Wilcoxon rank sum statistic or Wilcoxon signed rank statistic will be used as expression score.}
 
 \item{paired}{Are values in data set paired or not.}
 

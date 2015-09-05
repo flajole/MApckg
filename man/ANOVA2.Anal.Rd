@@ -25,7 +25,7 @@ Native \code{analSet} with one added \code{$aov2} element consisting of:
 \item\code{$thresh} - value of \code{thresh} argument
 \item\code{$multi.c} - value of \code{p.cor} argument
 \item\code{$sig.mat} - data frame of significant features
-\item\code{$vennC} - Venn counts \code{\link{getVennCounts}}
+\item\code{$vennC} - Venn counts
 }
 }
 \description{

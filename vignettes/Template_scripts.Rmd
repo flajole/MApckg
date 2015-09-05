@@ -9,7 +9,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-Below you see the R code script which you can easily copy-paste and vary according to your own needs (read comments for the details).
+#Template script for MSdata and MApckg
+
+Below you see the R code script which you can easily copy-paste and vary according to your own needs (read comments, [manual](https://github.com/flajole/MApckg/blob/master/vignettes/MApckg_tutorial.Rmd) and functions documentation for details).
 
 
 ```r

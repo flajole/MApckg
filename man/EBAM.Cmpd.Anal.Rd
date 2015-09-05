@@ -26,20 +26,12 @@ If \code{"wilc.ebam"}, a (standardized) Wilcoxon sum / signed rank statistic wil
 Note: if method is \code{"wilc.ebam"}, then \code{A0} and \code{var.equal} parameters will be ignored}
 
 \item{A0}{Fudge Factor. \code{\link{EBAM.A0.Anal}}}
-
-\item{dataSet}{}
-
-\item{analSet}{}
-
-\item{paired}{Are values in data set paired or not.}
-
-\item{var.equal}{Are variances assumed equal or not.}
 }
 \value{
-Native \code{analSet} with one added \code{$ebam.a0} element containing
+\code{EBAM.A0.Anal} - native \code{analSet} with one added \code{$ebam.a0} element containing
 standard \code{\link[siggenes]{find.a0}} function output
 
-Native \code{analSet} with one added \code{$ebam} element containing
+\code{EBAM.Cmpd.Anal} - native \code{analSet} with one added \code{$ebam} element containing
 standard \code{\link[siggenes]{ebam}} function output
 }
 \description{

@@ -7,6 +7,10 @@
 Kmeans.Anal(dataSet, analSet, clust.num)
 }
 \arguments{
+\item{dataSet}{}
+
+\item{analSet}{}
+
 \item{clust.num}{The cluster number.}
 }
 \value{

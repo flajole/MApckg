@@ -4,9 +4,11 @@
 \alias{SetEBAMSigMat}
 \title{EBAM matrix of significance}
 \usage{
-SetEBAMSigMat(analSet, delta = 0.9)
+SetEBAMSigMat(dataSet, analSet, delta = 0.9)
 }
 \arguments{
+\item{dataSet}{}
+
 \item{analSet}{}
 
 \item{delta}{The delta to control FDR}

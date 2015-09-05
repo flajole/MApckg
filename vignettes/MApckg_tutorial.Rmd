@@ -37,12 +37,18 @@ These packages are created to make your life easier. However, life have to becom
 * Install R.
 * Install all the packages necessary for MetaboAnalyst. Use this command:
 ```r
-install.packages(c("netcdf", "imagemagick", "graphviz", "Rserve", "ellipse", "scatterplot3d","pls", "caret", "multicore", "lattice", "Cairo", "randomForest", "e1071","gplots", "som", "xtable", "RColorBrewer", "xcms","impute", "pcaMethods","siggenes", "globaltest", "GlobalAncova", "Rgraphviz","KEGGgraph", "preprocessCore", "genefilter", "pheatmap", "igraph", "RJSONIO", "SSPA", "caTools", "ROCR", "pROC"))
+install.packages(c( "netcdf", "imagemagick", "graphviz", "Rserve", "ellipse",
+                    "scatterplot3d","pls", "caret", "multicore", "lattice",
+                    "Cairo", "randomForest", "e1071","gplots", "som", "xtable",
+                    "RColorBrewer", "xcms","impute", "pcaMethods","siggenes",
+                    "globaltest", "GlobalAncova", "Rgraphviz","KEGGgraph",
+                    "preprocessCore", "genefilter", "pheatmap", "igraph",
+                    "RJSONIO", "SSPA", "caTools", "ROCR", "pROC"))
 ```
-* Download two of my packages and install them (use your own file paths to downloaded archive files):
+* Install two of my packages:
 ```r
-install.packages("C:/R/MApckg.tar.gz", repos=NULL, type="source")
-install.packages("C:/R/MSdata.tar.gz", repos=NULL, type="source")
+devtools::install_github("flajole/MApckg")
+devtools::install_github("flajole/MSdata")
 ```
 
 * Attach the packages in R.
@@ -68,7 +74,7 @@ For example:
 Where the first factor is phenotype (wild type or mutant); the second one is control/treatment; the third one is whatever else marker 1 or 0.
 The program doesn't care about the actual meaning of all these labels! So just keep the order of factors the same.
 
-There could be any number of factors. But if you have a lot of important sample information (for instance, more than 3 factors) it could be inconvenient to type it all. In that case you may just ignore grouping labels and use another option – three separate tables with intensity matrix, sample and peak data (**see below**).
+There could be any number of factors. But if you have a lot of important sample information (for instance, more than 3 factors) it could be inconvenient to type it all. In that case you may just ignore grouping labels and use another option - three separate tables with intensity matrix, sample and peak data (**see below**).
 
 By default if there is only one factor, it is automatically called `"Group"`. In all the other cases factors are called just `"Factor1"`, `"Factor2"`, etc. You can always change the factor names manually in the resulting table, or just set them in the function call:
 ```r
@@ -339,13 +345,13 @@ analSet <- PlotHeatMap2(dataSet, analSet)
 ```
 
 ## Step 6. Plotting
-Plotting functions are meant above just after corresponding analytical function. However, actually, you can perform all the planned statistical analysis at once – just copy-paste necessary lines from the set of scripts.
+Plotting functions are meant above just after corresponding analytical function. However, actually, you can perform all the planned statistical analysis at once - just copy-paste necessary lines from the set of scripts.
 
 Then, if you are interested in looking at particular plots, you can use corresponding functions one by one.
 
 Otherwise, if you don't need to look at images in real-time, you could just copy-paste plotting functions too, and all the image files will be created at the same time.
 
 ## Template Script
-See attached file Template_scripts.Rmd
+See attached [Template script](https://github.com/flajole/MApckg/blob/master/vignettes/Template_scripts.Rmd) 
 
 The best way is to look through the script and create your own one by choosing options, deleting unnecessary lines and setting all the parameters up.

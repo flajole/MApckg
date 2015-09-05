@@ -4,10 +4,11 @@
 \alias{PLS.Loadings}
 \title{PLS loadings}
 \usage{
-PLS.Loadings(dataSet, analSet, imgName, format = "png", dpi = 72,
-  width = NA, inx1 = 1, inx2 = 2, plotType, lbl.feat = 1)
+PLS.Loadings(dataSet, analSet, inx1 = 1, inx2 = 2)
 }
 \arguments{
+\item{dataSet}{}
+
 \item{analSet}{}
 
 \item{inx1,inx2}{The numbers of PC.}

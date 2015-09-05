@@ -49,8 +49,6 @@ PlotPLS.Permutation(dataSet, analSet, imgName = "pls_perm_", format = "png",
 \item{grey.scale}{If \code{TRUE} then plot is colored in 50 shades of gray.}
 
 \item{plotType}{\code{"scatter"} for scatter plot or \code{"boxplot"} for box plot}
-
-\item{show}{If \code{TRUE} then points at the plot are labeled.}
 }
 \description{
 Set of functions for plotting the results of PLS.
