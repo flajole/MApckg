@@ -29,7 +29,7 @@ PLSDA.CV<-function(dataSet, analSet, methodName="CV", compNum=GetDefaultPLSCVCom
     cls<-as.numeric(dataSet$cls)-1;
     datmat<-as.matrix(dataSet$norm);
 
-    plsda.cls <- caret::train(dataSet$norm, dataSet$cls, "pls", trControl=trainControl(method=ifelse(methodName == 'LOOCV', "LOOCV", 'CV')), tuneLength=compNum);
+    plsda.cls <- caret::train(dataSet$norm, dataSet$cls, "pls", trControl=caret::trainControl(method=ifelse(methodName == 'LOOCV', "LOOCV", 'CV')), tuneLength=compNum);
 
     # use the classifical regression to get R2 and Q2 measure
     plsda.reg <- pls::plsr(cls~datmat,method ='oscorespls', ncomp=compNum, validation= ifelse(methodName == 'LOOCV', "LOO", 'CV'));
@@ -50,7 +50,7 @@ PLSDA.CV<-function(dataSet, analSet, methodName="CV", compNum=GetDefaultPLSCVCom
     }
 
     # get coef. table, this can be error when class is very unbalanced  
-    coef.mat <- try(varImp(plsda.cls, scale=T)$importance);
+    coef.mat <- try(caret::varImp(plsda.cls, scale=T)$importance);
     if(class(coef.mat) == "try-error") {
         coef.mat <- NULL;
     }else{

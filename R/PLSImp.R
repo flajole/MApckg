@@ -107,13 +107,12 @@ PlotImpVar <- function(dataSet, imp.vec, xlbl, feat.num=15, color.BW=FALSE){
     x <- rep(lgd.x, feat.num);
     y <- 1:feat.num;
     par(xpd=T);
-    suppressMessages(require(RColorBrewer));
 
     nc <- ncol(mns);
 
     # modified for B/W color
     colorpalette <- ifelse(color.BW, "Greys", "RdYlGn");
-    col <- colorRampPalette(brewer.pal(10, colorpalette))(nc); # set colors for each class
+    col <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, colorpalette))(nc); # set colors for each class
     if(color.BW) col <- rev(col);
 
     # calculate background
@@ -133,7 +132,7 @@ PlotImpVar <- function(dataSet, imp.vec, xlbl, feat.num=15, color.BW=FALSE){
     }
 
     # now add color key, padding with more intermediate colors for contiuous band
-    col <- colorRampPalette(brewer.pal(25, colorpalette))(50)
+    col <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(25, colorpalette))(50)
     if(color.BW) col <- rev(col);
 
     nc <- length(col);

@@ -10,20 +10,17 @@ Authors@R: person("Dmitry", "Zubkov", email = "zubkov@mpimp-golm.de", role = c("
 Imports:   
 	png,
 	xtable,
-	lattice, 
 	caret, 	
 	ellipse, 	
 	RColorBrewer, 
-	pcaMethods,
 	Cairo, 
 	randomForest, 
 	e1071, 
-	gplots, 
+	grDevices,
+	grid,
 	som,
 	pheatmap, 
-	igraph, 
 	pls, 
 	siggenes,
-	genefilter, 
-	preprocessCore
+	genefilter
 License: GPL-3

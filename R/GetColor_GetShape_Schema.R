@@ -22,7 +22,7 @@ GetColorSchema <- function(dataSet, grayscale = FALSE, colVec = NULL){
      grp.num <- length(levels(dataSet$cls));
 
      if(grayscale){
-        dist.cols <- colorRampPalette(c("grey90", "grey30"))(grp.num);
+        dist.cols <- grDevices::colorRampPalette(c("grey90", "grey30"))(grp.num);
         lvs <- levels(dataSet$cls);
         colors <- vector(mode="character", length=length(dataSet$cls));
         for(i in 1:length(lvs)){
@@ -32,7 +32,7 @@ GetColorSchema <- function(dataSet, grayscale = FALSE, colVec = NULL){
         pal12 = c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99",
                     "#E31A1C", "#FDBF6F", "#FF7F00", "#CAB2D6", "#6A3D9A",
                     "#FFFF99", "#B15928");
-        dist.cols <- colorRampPalette(pal12)(grp.num);
+        dist.cols <- grDevices::colorRampPalette(pal12)(grp.num);
         lvs <- levels(dataSet$cls);
         colors <- vector(mode="character", length=length(dataSet$cls));
         for(i in 1:length(lvs)){

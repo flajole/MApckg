@@ -84,7 +84,7 @@ PlotSOM <- function(dataSet, analSet, imgName="som_", format="png", dpi=72, widt
 }
 
 # get members for given cluster index, return a character string
-GetSOMClusterMembers<-function(analSet, i, j){
+GetSOMClusterMembers<-function(dataSet, analSet, i, j){
 	clust<-analSet$som$visual;
 	xTrue<-clust$x == i;
 	yTrue<-clust$y == j;
@@ -120,7 +120,7 @@ GetAllSOMClusterMembers<-function(dataSet, analSet){
 	}
 	row.names(clust.df)<- rowNameVec;
 	colnames(clust.df)<-"Samples in each cluster";
-	print(xtable(clust.df, align="l|p{8cm}", caption="Clustering result using SOM"),caption.placement="top", size="\\scriptsize");
+	print(xtable::xtable(clust.df, align="l|p{8cm}", caption="Clustering result using SOM"),caption.placement="top", size="\\scriptsize");
 }
 
 # determine the number of rows and columns for a given total

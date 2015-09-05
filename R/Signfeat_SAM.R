@@ -16,8 +16,7 @@
 
 # SAM analysis
 SAM.Anal<-function(dataSet, analSet, method="d.stat", paired=FALSE, var.equal=TRUE){
-
-    suppressMessages(require(siggenes));
+	match.arg(method, c("d.stat", "wilc.stat"))
     mat<-t(dataSet$norm); # in sam the column is sample
     cl<-as.numeric(dataSet$cls); # change to 0 and 1 for class label
     if(dataSet$cls.num==2){
@@ -25,9 +24,9 @@ SAM.Anal<-function(dataSet, analSet, method="d.stat", paired=FALSE, var.equal=TR
             cl<-as.numeric(dataSet$pairs);
         }
         if(method == "d.stat"){
-            sam_out<-siggenes::sam(mat, cl, method=d.stat, var.equal=var.equal, R.fold=0, rand=123);
+            sam_out<-siggenes::sam(mat, cl, method="d.stat", var.equal=var.equal, R.fold=0, rand=123);
         }else{
-            sam_out<-siggenes::sam(mat, cl, method=wilc.stat, R.fold=0,rand=123);
+            sam_out<-siggenes::sam(mat, cl, method="wilc.stat", R.fold=0,rand=123);
         }	
     }else{
         sam_out<-siggenes::sam(mat, cl, rand=123);
@@ -150,8 +149,8 @@ GetSAMSigColNames<-function(analSet){
     colnames(analSet$sam.cmpds);
 }
 
-GetSigTable.SAM<-function(analSet){
-    GetSigTable(analSet$sam.cmpds, "SAM");
+GetSigTable.SAM<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$sam.cmpds, "SAM");
 }
 
 # obtain a default delta with reasonable number

@@ -85,5 +85,5 @@ GetAllKMClusterMembers<-function(dataSet, analSet){
 	}
 	row.names(clust.df)<- rowNameVec;
 	colnames(clust.df)<-"Samples in each cluster";
-	print(xtable(clust.df, align="l|p{8cm}", caption="Clustering result using K-means"), caption.placement="top", size="\\scriptsize");
+	print(xtable::xtable(clust.df, align="l|p{8cm}", caption="Clustering result using K-means"), caption.placement="top", size="\\scriptsize");
 }

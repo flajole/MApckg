@@ -284,8 +284,8 @@ GetTopInx <- function(vec, n, dec=T){
     return (vec);
 }
 
-GetSigTable.Volcano<-function(analSet){
-    GetSigTable(analSet$volcano$sig.mat, "volcano plot");
+GetSigTable.Volcano<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$volcano$sig.mat, "volcano plot");
 }
 
 GetVolcanoSigMat<-function(analSet){

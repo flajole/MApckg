@@ -112,7 +112,7 @@ PlotRF.Outlier<-function(dataSet, analSet, imgName="rf_outiler_", format="png", 
     cols <- GetColorSchema(dataSet);
     uniq.cols <- unique(cols);
     legend.nm <- unique(as.character(dataSet$cls));
-    dist.res <- outlier(analSet$rf);
+    dist.res <- randomForest::outlier(analSet$rf);
 
     imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
     if(is.na(width)){
@@ -156,8 +156,8 @@ GetRFOOB<-function(analSet){
     signif(errors[nrow, 1],3);
 }
 
-GetSigTable.RF<-function(analSet){
-    GetSigTable(analSet$rf.sigmat, "Random Forest");
+GetSigTable.RF<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$rf.sigmat, "Random Forest");
 }
 
 # significance measure, double[][]
@@ -174,7 +174,7 @@ GetRFSigColNames<-function(analSet){
 }
 
 GetRFConf.Table<-function(analSet){
-     print(xtable(analSet$rf$confusion, 
+     print(xtable::xtable(analSet$rf$confusion, 
         caption="Random Forest Classification Performance"), size="\\scriptsize");
 }
 
@@ -192,27 +192,27 @@ GetRFConfColNames<-function(analSet){
 }
 
 
-PlotConfusion <- function(clsConf){
-    prior(clsConf) <- 100 
-    # The above rescales the confusion matrix such that columns sum to 100.
-    opar <- par(mar=c(5.1, 6.1, 2, 2))
-    x <- x.orig <- unclass(clsConf)
-    x <- log(x + 0.5) * 2.33
-    x[x < 0] <- NA
-    x[x > 10] <- 10
-    diag(x) <- -diag(x)
-    image(1:ncol(x), 1:ncol(x),
-        -(x[, nrow(x):1]), xlab='Actual', ylab='',
-        col=colorRampPalette(c(hsv(h = 0, s = 0.9, v = 0.9, alpha = 1), 
-                             hsv(h = 0, s = 0, v = 0.9, alpha = 1), 
-                             hsv(h = 2/6, s = 0.9, v = 0.9, alpha = 1)))(41), 
-        xaxt='n', yaxt='n', zlim=c(-10, 10))
-    axis(1, at=1:ncol(x), labels=colnames(x), cex.axis=0.8)
-    axis(2, at=ncol(x):1, labels=colnames(x), las=1, cex.axis=0.8)
-    title(ylab='Predicted', line=4.5)
-    abline(h = 0:ncol(x) + 0.5, col = 'gray')
-    abline(v = 0:ncol(x) + 0.5, col = 'gray')
-    text(1:6, rep(6:1, each=6), labels = sub('^0$', '', round(c(x.orig), 0)))
-    box(lwd=2)
-    par(opar) # reset par
-}
+# PlotConfusion <- function(clsConf){
+    # prior(clsConf) <- 100 
+    # # The above rescales the confusion matrix such that columns sum to 100.
+    # opar <- par(mar=c(5.1, 6.1, 2, 2))
+    # x <- x.orig <- unclass(clsConf)
+    # x <- log(x + 0.5) * 2.33
+    # x[x < 0] <- NA
+    # x[x > 10] <- 10
+    # diag(x) <- -diag(x)
+    # image(1:ncol(x), 1:ncol(x),
+        # -(x[, nrow(x):1]), xlab='Actual', ylab='',
+        # col=grDevices::colorRampPalette(c(hsv(h = 0, s = 0.9, v = 0.9, alpha = 1), 
+                             # hsv(h = 0, s = 0, v = 0.9, alpha = 1), 
+                             # hsv(h = 2/6, s = 0.9, v = 0.9, alpha = 1)))(41), 
+        # xaxt='n', yaxt='n', zlim=c(-10, 10))
+    # axis(1, at=1:ncol(x), labels=colnames(x), cex.axis=0.8)
+    # axis(2, at=ncol(x):1, labels=colnames(x), las=1, cex.axis=0.8)
+    # title(ylab='Predicted', line=4.5)
+    # abline(h = 0:ncol(x) + 0.5, col = 'gray')
+    # abline(v = 0:ncol(x) + 0.5, col = 'gray')
+    # text(1:6, rep(6:1, each=6), labels = sub('^0$', '', round(c(x.orig), 0)))
+    # box(lwd=2)
+    # par(opar) # reset par
+# }

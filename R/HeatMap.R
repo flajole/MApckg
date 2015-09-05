@@ -71,7 +71,7 @@ PlotSubHeatMap <- function(dataSet, analSet, imgName="heatmap_", format="png", d
             # var.nms <- rownames(cor.res)[1:top.num];
         }else if(method.nm == 'vip'){
             if(is.null(analSet$plsda)){
-                analSet <- PLSR.Anal(dataSet, analSet);
+                analSet <- PLS.Anal(dataSet, analSet);
                 analSet <- PLSDA.CV(dataSet, analSet);
             }
             var.nms <- rownames(analSet$plsda$vip.mat)[1:top.num];
@@ -105,16 +105,15 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
 
     # set up colors for heatmap
     if(colors=="gbr"){
-        colors <- colorRampcolors(c("green", "black", "red"), space="rgb")(256);
+        colors <- grDevices::colorRampPalette(c("green", "black", "red"), space="rgb")(256);
     }else if(colors == "heat"){
-        colors <- heat.colors(256);
+        colors <- grDevices::heat.colors(256);
     }else if(colors == "topo"){
-        colors <- topo.colors(256);
+        colors <- grDevices::topo.colors(256);
     }else if(colors == "gray"){
-        colors <- colorRampcolors(c("grey90", "grey10"), space="rgb")(256);
+        colors <- grDevices::colorRampPalette(c("grey90", "grey10"), space="rgb")(256);
     }else{
-        suppressMessages(require(RColorBrewer));
-        colors <- rev(colorRampcolors(brewer.pal(10, "RdBu"))(256));
+        colors <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, "RdBu"))(256));
     }
 
     imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
@@ -190,9 +189,9 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
             color = colors,
             annotation_colors = ann_colors
             );
-    }else{
-        heatmap(hc.dat, Rowv = rowTree, Colv=colTree, col = colors, scale="column");
-    }
+    }#else{
+     #   heatmap(hc.dat, Rowv = rowTree, Colv=colTree, col = colors, scale="column");
+     #}
     dev.off();
 	frame()
 	grid::grid.raster(png::readPNG(imgName));
@@ -215,7 +214,7 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
 #' @param colors The color contrast. One of \code{"default"}, \code{"gbr"} (red/green), \code{"heat"}, \code{"topo"}, \code{"gray"}
 #' @param viewOpt View mode, \code{"overview"} or \code{"detailed"}
 #' @param hiRes If \code{TRUE}, then produces hi-resolution plot.
-#' @param sortInx If \code{A}, samples are arranged by the first factor; if \code{B} - by the second one. 
+#' @param sortInx If \code{"A"}, samples are arranged by the first factor; if \code{"B"} - by the second one. 
 #' @param var.inx Vector of the numbers of plotted features.
 #' @param imgName Image file name prefix.
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
@@ -234,7 +233,7 @@ PlotHeatMap2<-function(dataSet, analSet, imgName="heatmap2_", format="png", dpi=
 	match.arg(viewOpt, c("overview", "detailed"))
 	match.arg(sortInx, c("A", "B"))
     
-	if(sortInx == A){
+	if(sortInx == "A"){
         ordInx <- order(dataSet$facA, dataSet$facB);
     }else{
         ordInx <- order(dataSet$facB, dataSet$facA);
@@ -250,17 +249,16 @@ PlotHeatMap2<-function(dataSet, analSet, imgName="heatmap2_", format="png", dpi=
     colnames(hc.dat)<-substr(colnames(data), 1, 18) # some names are too long
 
     # set up parameter for heatmap
-    suppressMessages(require(RColorBrewer));
     if(colors=="gbr"){
-        colors <- colorRampcolors(c("green", "black", "red"), space="rgb")(256);
+        colors <- grDevices::colorRampPalette(c("green", "black", "red"), space="rgb")(256);
     }else if(colors == "heat"){
-        colors <- heat.colors(256);
+        colors <- grDevices::heat.colors(256);
     }else if(colors == "topo"){
-        colors <- topo.colors(256);
+        colors <- grDevices::topo.colors(256);
     }else if(colors == "gray"){
-        colors <- colorRampcolors(c("grey90", "grey10"), space="rgb")(256);
+        colors <- grDevices::colorRampPalette(c("grey90", "grey10"), space="rgb")(256);
     }else{
-        colors <- rev(colorRampcolors(brewer.pal(10, "RdBu"))(256));
+        colors <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, "RdBu"))(256));
     }
 
     imgName = paste(imgName, "dpi", dpi, ".", format, sep="");

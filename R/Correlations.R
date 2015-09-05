@@ -52,18 +52,17 @@ PlotCorrHeatMap<-function(dataSet, analSet, imgName="corr_heat_", format="png", 
     }
 
     # set up parameter for heatmap
-    suppressMessages(require(RColorBrewer));
-    suppressMessages(require(gplots));
+
     if(colors=="gbr"){
-        colors <- colorRampPalette(c("green", "black", "red"), space="rgb")(256);
+        colors <- grDevices::colorRampPalette(c("green", "black", "red"), space="rgb")(256);
     }else if(colors == "heat"){
-        colors <- heat.colors(256);
+        colors <- grDevices::heat.colors(256);
     }else if(colors == "topo"){
-        colors <- topo.colors(256);
+        colors <- grDevices::topo.colors(256);
     }else if(colors == "gray"){
-        colors <- colorRampPalette(c("grey90", "grey10"))(256);
+        colors <- grDevices::colorRampPalette(c("grey90", "grey10"))(256);
     }else{
-        colors <- rev(colorRampPalette(brewer.pal(10, "RdBu"))(256));
+        colors <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, "RdBu"))(256));
     }
 
     imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
@@ -107,7 +106,7 @@ PlotCorrHeatMap<-function(dataSet, analSet, imgName="corr_heat_", format="png", 
         dendro= "both";
     }
 
-    suppressMessages(require(pheatmap));
+
     if(fix.col){
         breaks <- seq(from = -1, to = 1, length = 257);
         pheatmap::pheatmap(corr.mat, 
@@ -333,7 +332,7 @@ GetCorSigColNames<-function(analSet){
     colnames(analSet$corr$cor.mat);
 }
 
-GetSigTable.Corr<-function(analSet){
-    GetSigTable(analSet$corr$cor.mat, "Pattern search using correlation analysis");
+GetSigTable.Corr<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$corr$cor.mat, "Pattern search using correlation analysis");
 }
 

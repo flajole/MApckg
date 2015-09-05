@@ -29,20 +29,20 @@ PLSDA.Permut<-function(dataSet, analSet, num=100, type="accu"){
     # dummy is not used, for the purpose to maintain lapply API
     Get.pls.bw <- function(dummy){
          cls <- cls[order(runif(length(cls)))];
-         pls <- plsda(datmat, as.factor(cls), ncomp=best.num);
+         pls <- caret::plsda(datmat, as.factor(cls), ncomp=best.num);
          pred <- predict(pls, datmat);
          Get.bwss(pred, cls);
     }
 
     Get.pls.accu <- function(dummy){
          cls <- cls[order(runif(length(cls)))];
-         pls <- plsda(datmat, as.factor(cls), ncomp=best.num);
+         pls <- caret::plsda(datmat, as.factor(cls), ncomp=best.num);
          pred <- predict(pls, datmat);
          sum(pred == cls)/length(cls);
     }
 
     # first calculate the bw values with original labels
-    pls <- plsda(datmat, as.factor(orig.cls), ncomp=best.num);
+    pls <- caret::plsda(datmat, as.factor(orig.cls), ncomp=best.num);
     pred.orig <- predict(pls, datmat);
     if(type=="accu"){
         perm.type = "prediction accuracy";

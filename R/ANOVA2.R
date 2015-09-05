@@ -174,8 +174,8 @@ GetAov2SigColNames<-function(analSet){
     colnames(analSet$aov2$sig.mat);
 }
 
-GetSigTable.Aov2<-function(analSet){
-    GetSigTable(analSet$aov2$sig.mat,
+GetSigTable.Aov2<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$aov2$sig.mat,
                 "Significant features identified by two-way ANOVA");
 }
 

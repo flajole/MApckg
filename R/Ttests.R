@@ -102,8 +102,8 @@ PlotTT<-function(dataSet, analSet, imgName="tt_", format="png", dpi=72, width=NA
 	grid::grid.raster(png::readPNG(imgName));
 }
 
-GetSigTable.TT<-function(analSet){
-    GetSigTable(analSet$tt$sig.mat, "t-tests");
+GetSigTable.TT<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$tt$sig.mat, "t-tests");
 }
 
 # return a double matrix with 2 columns - p values and lod
@@ -169,7 +169,6 @@ GetTtestP <- function(dataSet, paired=FALSE, equal.var=TRUE, nonpar=F){
                 }
             })
         }else{ # use fast version
-            suppressMessages(require(genefilter));
             p.value <- try(genefilter::rowttests(t(as.matrix(dataSet$norm)), dataSet$cls)$p.value);
             if(class(p.value) == "try-error") {
                p.value <- NA;

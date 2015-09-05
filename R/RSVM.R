@@ -117,8 +117,8 @@ PlotRSVM.Cmpd<-function(dataSet, analSet, imgName="svm_imp_", format="png", dpi=
 	grid::grid.raster(png::readPNG(imgName));
 }
 
-GetSigTable.SVM<-function(analSet){
-    GetSigTable(analSet$svm$sig.mat, "Recursive SVM");
+GetSigTable.SVM<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$svm$sig.mat, "Recursive SVM");
 }
 
 # significance measure, double[][]
@@ -193,8 +193,8 @@ CreateLadder <- function(Ntotal, Nmin=5 ){
 ##             and each row for a gene
 ##          The top important gene in each level are those high-freqent ones
 RSVM <- function(x, y, ladder, CVtype, CVnum=0 ){
-    suppressMessages(require(e1071));
-    ## check if y is binary response
+    
+	## check if y is binary response
     Ytype <- names(table(y))
     if( length(Ytype) != 2)
     {
@@ -288,7 +288,7 @@ RSVM <- function(x, y, ladder, CVtype, CVnum=0 ){
             ## note: the classification performance is idenpendent of about scale is T/F  #####
             ## for "LOO", the test data should be as.data.frame, matrxi will trigger error #####
             ###################################################################################
-             svmres <- svm(xTrain[, SelInd], yTrain, scale=T, type="C-classification", kernel="linear" )
+             svmres <- e1071::svm(xTrain[, SelInd], yTrain, scale=T, type="C-classification", kernel="linear" )
              if( CVtype == "LOO" ){
                  svmpred <- predict(svmres, as.data.frame(xTest[SelInd], nrow=1) )
              }else{

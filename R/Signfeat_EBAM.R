@@ -9,7 +9,7 @@
 
 # deteriming a0, only applicable for z.ebam (default)
 EBAM.A0.Anal<-function(dataSet, analSet, paired=FALSE, var.equal=TRUE){
-    suppressMessages(require(siggenes));
+
     if(paired){
         cl.ebam<-as.numeric(dataSet$pairs); 
     }else{
@@ -49,9 +49,9 @@ EBAM.Cmpd.Anal<-function(dataSet, analSet, method="z.ebam", A0=0, paired=FALSE, 
     }
     conc.ebam<-t(dataSet$norm); # in sam column is sample, row is feature
     if(method=="z.ebam"){
-        ebam_out<-siggenes::ebam(conc.ebam, cl.ebam, method=z.ebam, a0=A0, var.equal=var.equal, fast=TRUE, gene.names = names(dataSet$norm), rand=123);
+        ebam_out<-siggenes::ebam(conc.ebam, cl.ebam, method="z.ebam", a0=A0, var.equal=var.equal, fast=TRUE, gene.names = names(dataSet$norm), rand=123);
     }else{
-        ebam_out<-siggenes::ebam(conc.ebam, cl.ebam, method=wilc.ebam, gene.names = names(dataSet$norm), rand=123);
+        ebam_out<-siggenes::ebam(conc.ebam, cl.ebam, method="wilc.ebam", gene.names = names(dataSet$norm), rand=123);
     }
     analSet$ebam<-ebam_out;
 	return(analSet);
@@ -153,6 +153,6 @@ GetEBAMSigColNames<-function(analSet){
     colnames(analSet$ebam.cmpds);
 }
 
-GetSigTable.EBAM<-function(analSet){
-    GetSigTable(analSet$ebam.cmpds, "EBAM");
+GetSigTable.EBAM<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$ebam.cmpds, "EBAM");
 }

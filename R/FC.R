@@ -219,8 +219,8 @@ PlotFC<-function(dataSet, analSet, imgName="fc_", format="png", dpi=72, width=NA
 	grid::grid.raster(png::readPNG(imgName));
 }
 
-GetSigTable.FC<-function(analSet){
-    GetSigTable(analSet$fc$sig.mat, "fold change analysis");
+GetSigTable.FC<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$fc$sig.mat, "fold change analysis");
 }
 
 GetFCSigMat<-function(analSet){

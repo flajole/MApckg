@@ -199,8 +199,8 @@ GetAovPostHocSig<-function(analSet){
     analSet$aov$sig.mat[,4];
 }
 
-GetSigTable.Anova<-function(analSet){
-    GetSigTable(analSet$aov$sig.mat, "One-way ANOVA and post-hoc analysis");
+GetSigTable.Anova<-function(dataSet, analSet){
+    GetSigTable(dataSet, analSet$aov$sig.mat, "One-way ANOVA and post-hoc analysis");
 }
 
 GetAnovaUpMat<-function(analSet){
