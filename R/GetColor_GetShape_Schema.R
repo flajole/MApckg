@@ -1,10 +1,10 @@
-GetShapeSchema <- function(dataSet, show.name, grey.scale, shapeVec = NULL){
-    if(!is.null(shapeVec) && all(shapeVec > 0)){
+GetShapeSchema <- function(dataSet, show.name, grey.scale){
+	if(!is.null(dataSet$shapeVec) && all(dataSet$shapeVec > 0)){
         sps <- rep(0, length=length(dataSet$cls));
         clsVec <- as.character(dataSet$cls)
-        grpnms <- names(shapeVec);
+        grpnms <- names(dataSet$shapeVec);
         for(i in 1:length(grpnms)){
-            sps[clsVec == grpnms[i]] <- shapeVec[i];
+            sps[clsVec == grpnms[i]] <- dataSet$shapeVec[i];
         }
         shapes <- sps;
     }else{
@@ -17,7 +17,7 @@ GetShapeSchema <- function(dataSet, show.name, grey.scale, shapeVec = NULL){
     return(shapes);
 }
 
-GetColorSchema <- function(dataSet, grayscale = FALSE, colVec = NULL){
+GetColorSchema <- function(dataSet, grayscale = FALSE){
     # test if total group number is over 9
      grp.num <- length(levels(dataSet$cls));
 
@@ -39,12 +39,12 @@ GetColorSchema <- function(dataSet, grayscale = FALSE, colVec = NULL){
             colors[dataSet$cls == lvs[i]] <- dist.cols[i];
         }
      }else{
-        if(!is.null(colVec) && !any(colVec =="#NA")){
+        if(!is.null(dataSet$colVec) && !any(dataSet$colVec =="#NA")){
             cols <- vector(mode="character", length=length(dataSet$cls));
             clsVec <- as.character(dataSet$cls)
-            grpnms <- names(colVec);
+            grpnms <- names(dataSet$colVec);
             for(i in 1:length(grpnms)){
-                cols[clsVec == grpnms[i]] <- colVec[i];
+                cols[clsVec == grpnms[i]] <- dataSet$colVec[i];
             }
             colors <- cols;
         }else{

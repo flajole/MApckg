@@ -180,7 +180,7 @@ PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png",
         if (length(uniq.cols) == 1) {
             points(lv1, lv2, pch=pchs, col=cols, cex=1.0);
         } else {
-            if(grey.scale | (exists("shapeVec") && all(shapeVec>0))){
+            if(grey.scale | (!is.null(dataSet$shapeVec) && all(dataSet$shapeVec>0))){
                 points(lv1, lv2, pch=pchs, col=cols, cex=1.8);
             }else{
                 points(lv1, lv2, pch=21, bg=cols, cex=2);
