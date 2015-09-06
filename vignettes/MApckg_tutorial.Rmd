@@ -37,13 +37,14 @@ These packages are created to make your life easier. However, life have to becom
 * Install R.
 * Install all the packages necessary for MetaboAnalyst. Use this command:
 ```r
-install.packages(c( "netcdf", "imagemagick", "graphviz", "Rserve", "ellipse",
-                    "scatterplot3d","pls", "caret", "multicore", "lattice",
-                    "Cairo", "randomForest", "e1071","gplots", "som", "xtable",
-                    "RColorBrewer", "xcms","impute", "pcaMethods","siggenes",
-                    "globaltest", "GlobalAncova", "Rgraphviz","KEGGgraph",
-                    "preprocessCore", "genefilter", "pheatmap", "igraph",
-                    "RJSONIO", "SSPA", "caTools", "ROCR", "pROC", "devtools"))
+source("http://bioconductor.org/biocLite.R")
+biocLite(c( "netcdf", "imagemagick", "graphviz", "Rserve", "ellipse",
+            "scatterplot3d","pls", "caret", "multicore", "lattice",
+            "Cairo", "randomForest", "e1071","gplots", "som", "xtable",
+            "RColorBrewer", "xcms","impute", "pcaMethods","siggenes",
+            "globaltest", "GlobalAncova", "Rgraphviz","KEGGgraph",
+            "preprocessCore", "genefilter", "pheatmap", "igraph",
+            "RJSONIO", "SSPA", "caTools", "ROCR", "pROC", "devtools"))
 ```
 * Install two of my packages:
 ```r
