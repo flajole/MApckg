@@ -57,45 +57,48 @@ require(MApckg, MSdata)
 ```
 
 ## Step 1. Converting QI output to a nice table
-Use `PQI_to_MA` function for proteome QI data.
-Use `MQI_to_MA` function for metabolome or lipidome QI data.
-You can open the function documentation containing the description of all the parameters and examples of usage by this command:
+
+|Use `PQI_to_MA` function for proteome QI data.
+|Use `MQI_to_MA` function for metabolome or lipidome QI data.
+
+|You can open the particular function documentation containing the description of all the parameters and examples of usage by this command:
 ```r
 ?MQI_to_MA
 ```
 The auto-recognition of grouping factors is implemented now. For this matter group labels should be standardized in this way:
 
-    `GroupingFactor1_GroupingFactor2_ GroupingFactor3_etc...`
+    `GroupingFactor1_GroupingFactor2_GroupingFactor3_etc...`
 
 For example:
 
     `WT_C_0; WT_T_0; WT_C_1; WT_T_1; Mut_C_0; Mut_T_0; Mut_C_1; Mut_T_1`
 
-Where the first factor is phenotype (wild type or mutant); the second one is control/treatment; the third one is whatever else marker 1 or 0.
-The program doesn't care about the actual meaning of all these labels! So just keep the order of factors the same.
+Where the first factor is phenotype (wild type or mutant); the second one is controlor treatment; the third one is whatever else marker 1 or 0.
 
-There could be any number of factors. But if you have a lot of important sample information (for instance, more than 3 factors) it could be inconvenient to type it all. In that case you may just ignore grouping labels and use another option - three separate tables with intensity matrix, sample and peak data (**see below**).
+The program doesn't care about the actual meaning of all these labels! So just keep the order of factors the same through all group labels.
+
+There could be any number of factors. But if you have a lot of important sample information (for instance, more than 3 factors) it could be inconvenient to type them all. In that case you may just ignore grouping labels and use another option - three separate tables with intensity matrix, sample and peak data (**see below**).
 
 By default if there is only one factor, it is automatically called `"Group"`. In all the other cases factors are called just `"Factor1"`, `"Factor2"`, etc. You can always change the factor names manually in the resulting table, or just set them in the function call:
 ```r
 	MQI_to_MA("C:/QI_data", 
-	facNames = c("Species", "Phenotype", "Treatment", "Time"))
+	            facNames = c("Species", "Phenotype", "Treatment", "Time"))
 ```
 
 (For this example grouping labels should look like `Species_Phenotype_Treatment_Time`)
 
-Please, always revise the resulting table in case if something went wrong!
+Please always revise the resulting table in case something went wrong!
 
 ## Step 2. Uploading the data
 As for now, there are two options.
 
-1. You have a table with:
-* identifier of the peak/chemical in the first column; 
+###1. You have a table with:
+* identifier of the peak/compound in the first column; 
 * identifier of the sample in the first row; 
 * any number of grouping factors below the sample row;
 * looking like:
 
-
+|  |  |  |  |  |  |  |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Sample** | **S1T0** | **S1T1** | **S1T2** | **S2T0** | **S2T1** | **S2T2** | **S3T0** | **S3T1** | **S3T2** | **S4T0** | **S4T1** | **S4T2** |
 | **Phenotype** | **WT** | **WT** | **WT** | **WT** | **WT** | **WT** | **MT** | **MT** | **MT** | **MT** | **MT** | **MT** |
@@ -169,7 +172,8 @@ sampleData(msdata)	# Look at the samples metadata.
 peakData(msdata)	# Look at the peaks metadata.
 ```
 Now you can apply different types of normalization/filtering/retention indexing/etc.
-A LOT OF FABULOUS STUFF WILL BE HERE
+
+All the `MSdata` package functions with their description, list of all possible arguments and default values of these arguments are listed in [MSdata PDF manual](https://github.com/flajole/MSdata/MSdata.pdf)
 
 ## Step 4. Export to MetaboAnalysis
 You should use `MSdata_to_MA` function. Examples of usage: 
@@ -196,7 +200,7 @@ Also, create an empty list for storing the analysis results:
 	analSet <- list()
 ```
 ## Step 5. Statistical analysis
-REMEMBER: you always can read about different statistics, their outputs and etc. in detail in [MetaboAnalyst tutorial](http://www.metaboanalyst.ca/faces/home.xhtml). Just open the file and use Ctrl+F.
+REMEMBER: you always can read about different statistics, their outputs and etc. in detail in step-by-step [MetaboAnalyst tutorial](http://www.metaboanalyst.ca/faces/home.xhtml). Just open the file and use Ctrl+F.
 
 All the `MApckg` functions with their description, list of all possible arguments and default values of these arguments are listed in [MApckg PDF manual](https://github.com/flajole/MApckg/MApckg.pdf)
 
