@@ -43,8 +43,8 @@ biocLite(c( "netcdf", "imagemagick", "graphviz", "Rserve", "ellipse",
             "Cairo", "randomForest", "e1071","gplots", "som", "xtable",
             "RColorBrewer", "xcms","impute", "pcaMethods","siggenes",
             "globaltest", "GlobalAncova", "Rgraphviz","KEGGgraph",
-            "preprocessCore", "genefilter", "pheatmap", "igraph",
-            "RJSONIO", "SSPA", "caTools", "ROCR", "pROC", "devtools"))
+            "preprocessCore", "genefilter", "pheatmap", "igraph", "RJSONIO", 
+			"SSPA", "caTools", "ROCR", "pROC", "devtools", "abind"))
 ```
 * Install two of my packages:
 ```r
@@ -52,7 +52,7 @@ devtools::install_github("flajole/MApckg")
 devtools::install_github("flajole/MSdata")
 ```
 
-* Attach the packages in R.
+* Attach the packages in R. Do it every time before work.
 ```r
 require(MApckg, MSdata)
 ```
