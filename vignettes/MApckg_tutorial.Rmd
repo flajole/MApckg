@@ -16,6 +16,8 @@ vignette: >
 # MSdata and MApckg for Giavalisco's lab
 These packages are created to make your life easier. However, life have to become more complicated sometimes to become easier at the end. Please, be patient. So am I.
 
+I would be grateful for any feedback (bug reports, advices what to implement, etc.)
+
 ## The pipeline
 
 
@@ -54,7 +56,7 @@ devtools::install_github("flajole/MSdata")
 
 * Attach the packages in R. Do it every time before work.
 ```r
-require(MApckg, MSdata)
+require(c("MApckg", "MSdata"))
 ```
 
 ## Step 1. Converting QI output to a nice table
