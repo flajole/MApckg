@@ -24,4 +24,7 @@ Native \code{analSet} with two added elements:
 PLS loadings.
 Adds loading matrix to \code{analSet$pls} element.
 }
+\seealso{
+\code{\link{PLS.Anal}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
+}
 

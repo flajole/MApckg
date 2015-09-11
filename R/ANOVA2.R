@@ -17,6 +17,8 @@
 #' \item\code{$sig.mat} - data frame of significant features
 #' \item\code{$vennC} - Venn counts 
 #' }
+#' @seealso \code{\link{PlotANOVA2}} for plotting functions\cr
+#' \code{\link{ANOVA.Anal}} for one-way analytical function
 #' @export
 
 # p.value corrrection - bonferroni, holm, fdr,
@@ -133,6 +135,7 @@ aov.between <- function(x) {
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{ANOVA2.Anal}} for analytical function
 #' @export
 # plot ven diagram for ANOVA results
 PlotANOVA2<-function(dataSet, analSet, imgName="aov2_", format="png", dpi=72, width=NA){

@@ -23,4 +23,7 @@ PlotANOVA(dataSet, analSet, imgName = "aov_", format = "png", dpi = 72,
 \description{
 Plot one-way ANOVA results
 }
+\seealso{
+\code{\link{ANOVA.Anal}} for analytical function
+}
 

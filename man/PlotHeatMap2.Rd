@@ -52,4 +52,8 @@ Each colored cell on the map corresponds to a concentration value in your data t
 with samples in rows and features/compounds in columns.
 You can use heatmap to identify samples/features that are unusually high/low.
 }
+\seealso{
+\code{\link[pheatmap]{pheatmap}} for used statistical function\cr
+\code{\link{PlotSubHeatMap}} for one-factored data
+}
 

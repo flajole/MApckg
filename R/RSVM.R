@@ -15,6 +15,8 @@
 #' \code{"LOO"} - leave-one-out CV (LOOCV); \code{"bootstrape"} - bootstrape CV
 #' @return Native \code{analSet} with one added element \code{$svm} containing  
 #' - standard \code{\link[randomForest]{randomForest}} function output
+#' @seealso \code{\link[e1071]{svm}} for used statistical function\cr
+#' \code{\link{PlotRSVM}} for plotting functions
 #' @export
 
 # recursive SVM for feature selection and classification
@@ -54,6 +56,7 @@ RSVM.Anal<-function(dataSet, analSet, cvType=10){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{RSVM.Anal}} for analytical function
 #' @name PlotRSVM
 NULL
 

@@ -32,4 +32,7 @@ Functions for plotting the results of EBAM.
 
 \code{PlotEDAM.Cmpd} - plot significant features.
 }
+\seealso{
+\code{\link{EBAM.Anal}}, \code{\link{SetEBAMSigMat}} for analytical functions
+}
 

@@ -15,7 +15,8 @@
 #' @param feat.nm ??????????????????????????????????????
 #' @param feat.num The number of top features to plot.
 #' @param color.BW If \code{TRUE}, grey scale is used.
-
+#' @seealso \code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
+#' @export
 # BHan: added bgcolor parameter for B/W color
 PlotPLS.Imp<-function(dataSet, analSet, imgName="pls_imp_", format="png", dpi=72, width=NA, type="vip", feat.nm, feat.num=15, color.BW=FALSE){
 	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal and PLSDA.CV first.")

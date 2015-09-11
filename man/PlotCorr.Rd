@@ -23,4 +23,7 @@ PlotCorr(dataSet, analSet, imgName = "ptn_", format = "png", dpi = 72,
 \description{
 Plot the top 25 features correlated to a feature or a pattern.
 }
+\seealso{
+\code{\link{PattetnHunter}}, \code{\link{PlotCorrHeatMat}}
+}
 

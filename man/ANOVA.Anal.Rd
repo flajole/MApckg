@@ -36,4 +36,8 @@ Performs one-way ANOVA. Creates a file with results:
 either \code{"anova_nonparametric.csv"} or \code{"anova_posthoc.csv"}
 depending on \code{nonpar} argument.
 }
+\seealso{
+\code{\link{PlotANOVA}} for plotting functions
+\code{\link{ANOVA2.Anal}} for two-way analytical function
+}
 

@@ -63,4 +63,7 @@ Set of functions for plotting the results of PLS.
 
 \code{PlotPLS.Permutation} - plot PLSDA permutation plot.
 }
+\seealso{
+\code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}
+}
 

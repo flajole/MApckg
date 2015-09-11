@@ -23,4 +23,7 @@ PlotFC(dataSet, analSet, imgName = "fc_", format = "png", dpi = 72,
 \description{
 Plot fold change analysis results.
 }
+\seealso{
+\code{\link{FC.Anal}} for analytical function
+}
 

@@ -30,6 +30,8 @@
 #' \item\code{$htmap$dist.par} - equal \code{smplDist} argument value
 #' \item\code{$htmap$clust.par} - equal \code{clstDist} argument value  
 #' }
+#' @seealso \code{\link[pheatmap]{pheatmap}} for used statistical function\cr
+#' \code{\link{PlotHeatMap2}} for two-factored data
 #' @export
 
 # plot a sub heatmap based on results from t-tests/ANOVA, VIP or randomforest
@@ -225,6 +227,8 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
 #' \item\code{$htmap2$dist.par} - equal \code{smplDist} argument value
 #' \item\code{$htmap2$clust.par} - equal \code{clstDist} argument value  
 #' }
+#' @seealso \code{\link[pheatmap]{pheatmap}} for used statistical function\cr
+#' \code{\link{PlotSubHeatMap}} for one-factored data
 #' @export
 PlotHeatMap2<-function(dataSet, analSet, imgName="heatmap2_", format="png", dpi=72, width=NA, smplDist='pearson', clstDist='average', colors="bwm", viewOpt="overview", hiRes=FALSE, sortInx = 2, var.inx=1:ncol(dataSet$norm)){
 	match.arg(colors, c("gbr", "heat", "topo", "gray", "default"))

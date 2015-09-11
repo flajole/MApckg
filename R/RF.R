@@ -12,6 +12,8 @@
 #' \item\code{$rf} - standard \code{\link[randomForest]{randomForest}} function output
 #' \item\code{$rf.sigmat} - matrix of features significance (sorted by MeanDecreaseAccuracy).  
 #' }
+#' @seealso \code{\link[randomForest]{randomForest}} for used statistical function\cr
+#' \code{\link{PlotRF}} for plotting functions
 #' @export
 # random forests
 RF.Anal<-function(dataSet, analSet, treeNum=500, tryNum=10){
@@ -41,6 +43,7 @@ RF.Anal<-function(dataSet, analSet, treeNum=500, tryNum=10){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{RF.Anal}} for analytical function
 #' @name PlotRF
 NULL
 

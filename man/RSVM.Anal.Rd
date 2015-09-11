@@ -29,4 +29,8 @@ This process creates a series of SVM models (levels).
 The features used by the best model are plotted.
 LOOCV: leave one out cross-validation.
 }
+\seealso{
+\code{\link[e1071]{svm}} for used statistical function\cr
+\code{\link{PlotRSVM}} for plotting functions
+}
 

@@ -29,4 +29,7 @@ Native \code{analSet} with some elements added:
 Perform permutation, using training classification accuracy or separation distance as
 indicator, for two or multi-groups.
 }
+\seealso{
+\code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PlotPLS}}
+}
 

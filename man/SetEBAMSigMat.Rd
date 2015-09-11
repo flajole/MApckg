@@ -23,4 +23,8 @@ Native \code{analSet} with two added elements:
 \description{
 EBAM matrix of significance. Writes results to \code{"ebam_sigfeatures.csv"} file.
 }
+\seealso{
+\code{\link{EBAM.Anal}} for analytical function\cr
+\code{\link{PlotEBAM}} for plotting functions
+}
 

@@ -12,6 +12,9 @@
 #' @param var.equal Are variances assumed equal or not.
 #' @return Native \code{analSet} with one added \code{$sam} element containing 
 #' standard \code{\link[siggenes]{sam}} function output
+#' @seealso \code{\link[siggenes]{sam}} for used statistical functions\cr
+#' \code{\link{SetSAMSigMat}} for setting matrix of significance\cr
+#' \code{\link{PlotSAM}} for plotting functions
 #' @export
 
 # SAM analysis
@@ -47,6 +50,8 @@ SAM.Anal<-function(dataSet, analSet, method="d.stat", paired=FALSE, var.equal=TR
 #' \item\code{$sam.cmpd} - matrix containing \code{d.value}, \code{stdev}, \code{rawp}, \code{q.value} columns
 #' \item\code{$sam.delta} - value of \code{delta} argument
 #' }
+#' @seealso \code{\link{SAM.Anal}} for analytical function\cr
+#' \code{\link{PlotSAM}} for plotting functions
 #' @export
 SetSAMSigMat<-function(dataSet, analSet, delta=1.3){
 		if (is.null(analSet$sam)) stop("Please, conduct SAM.Anal first.")
@@ -70,6 +75,7 @@ SetSAMSigMat<-function(dataSet, analSet, delta=1.3){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{SAM.Anal}}, \code{\link{SetSAMSigMat}} for analytical functions
 #' @name PlotSAM
 NULL
 

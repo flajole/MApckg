@@ -16,6 +16,7 @@
 #' \item\code{$vip.mat} - matrix of weighted sums of absolute regression coefficients
 #' \item\code{$fit.info} - all performance measures calculated for different number of components
 #' }
+#' @seealso \code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
 #' @export
 
 # classification and feature selection

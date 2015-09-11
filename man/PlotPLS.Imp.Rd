@@ -36,4 +36,7 @@ and the other is weighted sum of absolute regression coefficients (coef.).
 The colored boxes on the right indicate the relative concentrations
 of the corresponding metabolite in each group under study.
 }
+\seealso{
+\code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
+}
 

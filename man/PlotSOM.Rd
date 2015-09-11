@@ -25,4 +25,7 @@ Plot SOM map for  less than 20 clusters.
 Please note : only cluster members will be calculated if the total cluster number (xdim*ydim) > 20.
 The blue lines represent the median intensities of each cluster.
 }
+\seealso{
+\code{\link{SOM.Anal}} for analytical function
+}
 

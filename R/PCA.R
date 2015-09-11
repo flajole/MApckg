@@ -14,6 +14,7 @@
 #' \item\code{$variance} - variance explained by each PC
 #' \item\code{$cum.var} - cummulated variance explained
 #' }
+#' @seealso \code{\link{PCA.Loadings}}, \code{\link{PlotPCA}}
 #' @export
 
 # perform PCA analysis
@@ -48,6 +49,7 @@ PCA.Anal<-function(dataSet, analSet){
 #' \item\code{$pca$load.x.uniq} - ???
 #' \item\code{$pca$imp.loads} - loading matrix
 #' }
+#' @seealso \code{\link{PCA.Anal}}, \code{\link{PlotPCA}}
 #' @export
 
 PCA.Loadings<-function(dataSet, analSet, inx1 = 1, inx2 = 2){
@@ -74,6 +76,7 @@ PCA.Loadings<-function(dataSet, analSet, inx1 = 1, inx2 = 2){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{PCA.Anal}}, \code{\link{PCA.Loadings}}
 #' @name PlotPCA
 NULL
 

@@ -65,4 +65,7 @@ Set of functions for plotting the results of PCA.
 
 \code{PlotPCALoadings} - plot loadings.
 }
+\seealso{
+\code{\link{PCA.Anal}}, \code{\link{PCA.Loadings}}
+}
 

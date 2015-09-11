@@ -4,7 +4,7 @@
 #'
 #' @return \code{EBAM.A0.Anal} - native \code{analSet} with one added \code{$ebam.a0} element containing 
 #' standard \code{\link[siggenes]{find.a0}} function output
-#' @describeIn EBAM.Cmpd.Anal
+#' @describeIn EBAM.Anal
 #' @export
 
 # deteriming a0, only applicable for z.ebam (default)
@@ -38,6 +38,10 @@ EBAM.A0.Anal<-function(dataSet, analSet, paired=FALSE, var.equal=TRUE){
 #' @param var.equal Are variances assumed equal or not.
 #' @return \code{EBAM.Cmpd.Anal} - native \code{analSet} with one added \code{$ebam} element containing 
 #' standard \code{\link[siggenes]{ebam}} function output
+#' @seealso \code{\link[siggenes]{ebam}}, \code{\link[siggenes]{find.a0}} for used statistical functions\cr
+#' \code{\link{SetEBAMSigMat}} for setting matrix of significance\cr
+#' \code{\link{PlotEBAM}} for plotting functions
+#' @rdname EBAM.Anal
 #' @export
 # note: if method is wilcoxon, the A0 and var equal will be ignored
 EBAM.Cmpd.Anal<-function(dataSet, analSet, method="z.ebam", A0=0, paired=FALSE, var.equal=TRUE){
@@ -70,6 +74,8 @@ EBAM.Cmpd.Anal<-function(dataSet, analSet, method="z.ebam", A0=0, paired=FALSE, 
 #' \item\code{$ebam.delta} - value of \code{delta} argument
 #' }
 #' @export
+#' @seealso \code{\link{EBAM.Anal}} for analytical function\cr
+#' \code{\link{PlotEBAM}} for plotting functions
 # return double matrix with 3 columns - z.value, posterior, local.fdr
 SetEBAMSigMat<-function(dataSet, analSet, delta=0.9){
     ebam.sum<-summary(analSet$ebam, delta);
@@ -92,6 +98,7 @@ SetEBAMSigMat<-function(dataSet, analSet, delta=0.9){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{EBAM.Anal}}, \code{\link{SetEBAMSigMat}} for analytical functions
 #' @name PlotEBAM
 NULL
 

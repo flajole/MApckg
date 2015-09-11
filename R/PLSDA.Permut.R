@@ -14,6 +14,7 @@
 #' \item\code{$plsda$permut.type} - 
 #' \item\code{$plsda$permut} - 
 #' }
+#' @seealso \code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PlotPLS}}
 #' @export
 
 # perform permutation, using training classification accuracy as

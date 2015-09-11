@@ -32,4 +32,7 @@ standard \code{\link[som]{som}} output.
 Perform Self Organizing Map analysis. Uses \code{\link[som]{som}} function.
 The parameters and outcome are identical.
 }
+\seealso{
+\code{\link{PlotSOM}} for plotting functions
+}
 

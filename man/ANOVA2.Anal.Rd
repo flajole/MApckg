@@ -33,4 +33,8 @@ Performs two-way ANOVA. Creates a file with results:
 either \code{"anova_within_sbj.csv"} or \code{"anova_between_sbj.csv"}
 depending on \code{type} argument.
 }
+\seealso{
+\code{\link{PlotANOVA2}} for plotting functions\cr
+\code{\link{ANOVA.Anal}} for one-way analytical function
+}
 

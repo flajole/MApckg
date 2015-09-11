@@ -19,6 +19,8 @@
 #' \item\code{$post.hoc} - post-hoc statistics, value of \code{post.hoc} argument
 #' \item\code{$sig.mat} - data frame of significant features with corresponding statistics
 #' }
+#' @seealso \code{\link{PlotANOVA}} for plotting functions
+#' \code{\link{ANOVA2.Anal}} for two-way analytical function
 #' @export
 
 ANOVA.Anal<-function(dataSet, analSet, nonpar= FALSE, thresh=0.05, post.hoc="fisher"){
@@ -154,6 +156,7 @@ parseFisher <- function(fisher, cut.off){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{ANOVA.Anal}} for analytical function
 #' @export
 PlotANOVA<-function(dataSet, analSet, imgName="aov_", format="png", dpi=72, width=NA){
     if (is.null(analSet$aov)) stop("Please, conduct ANOVA.Anal first.")

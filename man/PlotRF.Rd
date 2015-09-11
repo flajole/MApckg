@@ -38,4 +38,7 @@ Set of functions for plotting the results of Random Forest analysis.
 
 \code{PlotRF.Outlier} - plot outlying measures, only top 5 potential outliers are labeled.
 }
+\seealso{
+\code{\link{RF.Anal}} for analytical function
+}
 

@@ -44,4 +44,7 @@ and the default parameters will be used for t-tests to save computational time.
 If you choose non-parametric tests (Wilcoxon rank-sum test),
 the group variance will be ignored.
 }
+\seealso{
+\code{\link{PlotTT}} for plotting functions
+}
 

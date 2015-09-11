@@ -32,7 +32,7 @@ PlotCorrHeatMap(dataSet, analSet, imgName = "corr_heat_", format = "png",
 
 \item{no.clst}{If \code{TRUE}, no clustering lines are plotted.}
 
-\item{top}{?????????????????????}
+\item{top}{If \code{TRUE}, use total abs(correlation) in selection.}
 
 \item{top.num}{The number of the features with the best contrast to be plotted.}
 }
@@ -44,5 +44,8 @@ When color distribution is fixed, you can potentially compare the correlation pa
 In this case, you can choose "do not perform clustering" for all data set,
 or only to perform clustering on a single reference data set,
 then manually re-arranged other data sets according to the clustering pattern of the reference data set.
+}
+\seealso{
+\code{\link{PatternHunter}}, \code{\link{PlotCorr}}
 }
 

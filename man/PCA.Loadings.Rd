@@ -24,4 +24,7 @@ Native \code{analSet} with two added elements:
 PCA loadings.
 Adds loading matrix to \code{analSet$pca} element.
 }
+\seealso{
+\code{\link{PCA.Anal}}, \code{\link{PlotPCA}}
+}
 

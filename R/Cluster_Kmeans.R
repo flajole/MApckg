@@ -6,6 +6,7 @@
 #' @param clust.num The cluster number. 
 #' @return Native \code{analSet} with one added \code{$kmeans} element containing
 #' standard \code{\link[stats]{kmeans}} output.
+#' @seealso \code{\link{PlotKmeans}} for plotting functions
 #' @export
 # functions for k-means analysis
 Kmeans.Anal<-function(dataSet, analSet, clust.num){
@@ -25,6 +26,7 @@ Kmeans.Anal<-function(dataSet, analSet, clust.num){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{Kmeans.Anal}} for analytical function
 #' @export
 PlotKmeans<-function(dataSet, analSet, imgName="kmeans_", format="png", dpi=72, width=NA){
 	

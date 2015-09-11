@@ -23,4 +23,8 @@ Native \code{analSet} with two added elements:
 \description{
 SAM matrix of significance. Writes results to \code{"sam_sigfeatures.csv"} file.
 }
+\seealso{
+\code{\link{SAM.Anal}} for analytical function\cr
+\code{\link{PlotSAM}} for plotting functions
+}
 

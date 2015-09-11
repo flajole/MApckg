@@ -26,4 +26,8 @@ Native \code{analSet} with two added elements:
 Perform Random Forest analysis. Uses \code{\link[randomForest]{randomForest}} function.
 Writes results to \code{"randomforests_sigfeatures.csv"} file.
 }
+\seealso{
+\code{\link[randomForest]{randomForest}} for used statistical function\cr
+\code{\link{PlotRF}} for plotting functions
+}
 

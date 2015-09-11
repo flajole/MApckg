@@ -59,4 +59,8 @@ You can use heatmap to identify samples/features that are unusually high/low. \c
 Tip 1: Do not re-organize samples/rows to show the natural contrast among groups (with each group a block). \cr
 Tip 2: Display top number of features ranked by t-tests to retain the most constrasting patterns.
 }
+\seealso{
+\code{\link[pheatmap]{pheatmap}} for used statistical function\cr
+\code{\link{PlotHeatMap2}} for two-factored data
+}
 

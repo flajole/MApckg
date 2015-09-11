@@ -31,6 +31,7 @@
 #' \item\code{$inx.p} - logical vector of features with \code{p <= thresh}
 #' \item\code{$sig.mat} - data frame of significant features
 #' }
+#' @seealso \code{\link{PlotVolcano}} for plotting functions
 #' @export
 
 Volcano.Anal<-function(dataSet, analSet, paired=FALSE, fcthresh = 2, cmpType=0, percent.thresh=0.75, nonpar= FALSE, thresh=0.05, var.equal=TRUE){
@@ -133,6 +134,7 @@ Volcano.Anal<-function(dataSet, analSet, paired=FALSE, fcthresh = 2, cmpType=0, 
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{Volcano.Anal}} for analytical function
 #' @export
 
 # now try to label the interesting points

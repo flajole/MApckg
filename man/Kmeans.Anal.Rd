@@ -20,4 +20,7 @@ standard \code{\link[stats]{kmeans}} output.
 \description{
 Perform K-means analysis. Uses \code{\link[stats]{kmeans}} function.
 }
+\seealso{
+\code{\link{PlotKmeans}} for plotting functions
+}
 

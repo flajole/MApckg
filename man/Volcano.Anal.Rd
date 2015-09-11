@@ -53,4 +53,7 @@ For paired analysis, the x-axis is number of significant counts.
 Y-axis is -log10(p.value) for both cases.
 Writes an output file \code{"volcano.csv"}
 }
+\seealso{
+\code{\link{PlotVolcano}} for plotting functions
+}
 

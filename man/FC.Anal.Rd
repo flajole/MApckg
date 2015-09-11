@@ -45,4 +45,7 @@ For paired analysis, the program first counts the number of pairs with consisten
 If this number exceeds a given count threshold, the variable will be reported as significant.
 Writes an output file \code{"fold_change.csv"}.
 }
+\seealso{
+\code{\link{PlotFC}} for plotting functions
+}
 

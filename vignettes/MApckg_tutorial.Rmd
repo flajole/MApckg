@@ -23,7 +23,7 @@ I would be grateful for any feedback (bug reports, advices what to implement, et
 
 **Step 0.** Preparations.
 
-**Step 1.** Converting QI output to nice table.
+**Step 1.** Converting QI output to a nice table.
 
 **Step 2.** Uploading the data.
 

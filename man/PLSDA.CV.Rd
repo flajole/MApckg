@@ -32,4 +32,7 @@ Native \code{analSet} with one added \code{$plsda} element consisting of:
 Perform PLSDA classification and feature selection.
 Writes two output files: \code{"plsda_vip.csv"} and \code{"plsda_coef.csv"}.
 }
+\seealso{
+\code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
+}
 

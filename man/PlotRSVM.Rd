@@ -32,4 +32,7 @@ Set of functions for plotting the results of recursive Support Vector Machine an
 
 \code{PlotRSVM.VIP} - please note : features are ranked by their frequencies being selected in the best classifiers (only top 15 will be shown)
 }
+\seealso{
+\code{\link{RSVM.Anal}} for analytical function
+}
 

@@ -23,4 +23,7 @@ PlotANOVA2(dataSet, analSet, imgName = "aov2_", format = "png", dpi = 72,
 \description{
 Plot two-way ANOVA results
 }
+\seealso{
+\code{\link{ANOVA2.Anal}} for analytical function
+}
 

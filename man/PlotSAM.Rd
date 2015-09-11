@@ -34,4 +34,7 @@ Functions for plotting the results of SAM.
 
 \code{PlotSAM.Cmpd} - plot significant features.
 }
+\seealso{
+\code{\link{SAM.Anal}}, \code{\link{SetSAMSigMat}} for analytical functions
+}
 

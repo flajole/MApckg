@@ -26,4 +26,7 @@ Note, for unpaired samples, the x-axis is log (FC).
 For paired analysis, the x-axis is number of significant counts.
 Y-axis is -log10(p.value) for both cases.
 }
+\seealso{
+\code{\link{Volcano.Anal}} for analytical function
+}
 

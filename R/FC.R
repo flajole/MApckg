@@ -27,6 +27,7 @@
 #' \item\code{$inx.imp} - logical vector of features with significant difference (for unpaired data only)
 #' \item\code{$sig.mat} - data frame of significant features
 #' }
+#' @seealso \code{\link{PlotFC}} for plotting functions
 #' @export
 FC.Anal <- function(dataSet, analSet, fcthresh=2, percent.thresh=0.75, cmpType=0){
 	if(dataSet$paired==FALSE) {
@@ -137,6 +138,7 @@ FC.Anal.unpaired<-function(dataSet, analSet, fcthresh=2, cmpType = 0){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{FC.Anal}} for analytical function
 #' @export
 PlotFC<-function(dataSet, analSet, imgName="fc_", format="png", dpi=72, width=NA){
     imgName = paste(imgName, "dpi", dpi, ".", format, sep="");

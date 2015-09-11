@@ -23,4 +23,7 @@ PlotTT(dataSet, analSet, imgName = "tt_", format = "png", dpi = 72,
 \description{
 Plot t-test results
 }
+\seealso{
+\code{\link{Ttests.Anal}} for analytical function
+}
 

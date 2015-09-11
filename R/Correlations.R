@@ -19,8 +19,9 @@
 #' @param viewOpt View mode, \code{"overview"} or \code{"detailed"}
 #' @param fix.col If \code{TRUE}, color distribution is fixed.
 #' @param no.clst If \code{TRUE}, no clustering lines are plotted.
-#' @param top ?????????????????????
+#' @param top If \code{TRUE}, use total abs(correlation) in selection.
 #' @param top.num The number of the features with the best contrast to be plotted.
+#' @seealso \code{\link{PatternHunter}}, \code{\link{PlotCorr}}
 #' @export
 
 PlotCorrHeatMap<-function(dataSet, analSet, imgName="corr_heat_", format="png", dpi=72, width=NA, cor.method = "pearson", 
@@ -143,6 +144,8 @@ PlotCorrHeatMap<-function(dataSet, analSet, imgName="corr_heat_", format="png", 
 #' \item\code{$corr$cor.mat} - correlation matrix
 #' \item\code{$corr$pattern} - name of the feature of comparison or the used pattern.
 #' }
+#' @seealso \code{\link{PlotCorr}}, \code{\link{PlotCorrHeatMap}} for plotting functions
+#' 
 #' @name PatternHunter
 NULL
 
@@ -268,6 +271,7 @@ GenerateTemplates <- function(dataSet){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{PattetnHunter}}, \code{\link{PlotCorrHeatMat}}
 #' @export
 
 PlotCorr <- function(dataSet, analSet, imgName="ptn_", format="png", dpi=72, width=NA){

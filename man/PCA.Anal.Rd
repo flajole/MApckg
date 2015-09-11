@@ -26,4 +26,7 @@ Writes two output files: \code{"pca_score.csv"} and \code{"pca_loadings.csv"}.
 Adds \code{analSet$pca} element with \code{\link[stats]{prcomp}} function output
 and some basic statistics.
 }
+\seealso{
+\code{\link{PCA.Loadings}}, \code{\link{PlotPCA}}
+}
 

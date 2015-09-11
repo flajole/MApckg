@@ -28,4 +28,9 @@ standard \code{\link[siggenes]{sam}} function output
 \description{
 Perform Significance Analysis of Microarray (and Metabolites). Uses \code{\link[siggenes]{sam}} function.
 }
+\seealso{
+\code{\link[siggenes]{sam}} for used statistical functions\cr
+\code{\link{SetSAMSigMat}} for setting matrix of significance\cr
+\code{\link{PlotSAM}} for plotting functions
+}
 

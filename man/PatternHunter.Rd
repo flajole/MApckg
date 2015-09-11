@@ -42,4 +42,7 @@ Writes an output file \code{"correlation_feature.csv"}
 \code{Match.Pattern} performs analysis against a given pattern.
 Writes an output file \code{"correlation_pattern.csv"} respectively.
 }
+\seealso{
+\code{\link{PlotCorr}}, \code{\link{PlotCorrHeatMap}} for plotting functions
+}
 

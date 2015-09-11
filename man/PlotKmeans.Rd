@@ -26,4 +26,7 @@ Please note: only the cluster members will be calculated
 if the specified cluster number > 20.
 The blue lines represent the median intensities of each cluster.
 }
+\seealso{
+\code{\link{Kmeans.Anal}} for analytical function
+}
 

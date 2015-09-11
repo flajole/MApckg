@@ -44,4 +44,9 @@ Uses \code{\link[siggenes]{ebam}} function.
 \itemize{
 \item \code{EBAM.A0.Anal}: 
 }}
+\seealso{
+\code{\link[siggenes]{ebam}}, \code{\link[siggenes]{find.a0}} for used statistical functions\cr
+\code{\link{SetEBAMSigMat}} for setting matrix of significance\cr
+\code{\link{PlotEBAM}} for plotting functions
+}
 

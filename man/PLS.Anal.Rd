@@ -23,4 +23,7 @@ Uses \code{"oscorespls"} method of \code{\link[pls]{plsr}} function .
 Writes two output files: \code{"pls_score.csv"} and \code{"pls_loadings.csv"}.
 Adds \code{analSet$pls} element with \code{\link[pls]{plsr}} function output.
 }
+\seealso{
+\code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
+}
 

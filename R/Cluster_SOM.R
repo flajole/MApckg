@@ -14,6 +14,7 @@
 #' The following are permitted: \code{"bubble"}, \code{"gaussian"}
 #' @return Native \code{analSet} with one added \code{$som} element containing
 #' standard \code{\link[som]{som}} output.
+#' @seealso \code{\link{PlotSOM}} for plotting functions
 #' @export
 
 # SOM analysis
@@ -34,6 +35,7 @@ SOM.Anal<-function(dataSet, analSet, x.dim=1, y.dim=3, initMethod="linear", neig
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{SOM.Anal}} for analytical function
 #' @export
 
 # plot SOM map for  less than 20 clusters

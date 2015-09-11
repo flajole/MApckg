@@ -25,6 +25,7 @@
 #' \item\code{$inx.imp} - logical vector of features with significant difference
 #' \item\code{$sig.mat} - data frame of significant features
 #' }
+#' @seealso \code{\link{PlotTT}} for plotting functions
 #' @export
 
 
@@ -77,6 +78,7 @@ Ttests.Anal<-function(dataSet, analSet, nonpar=FALSE, thresh=0.05, paired=FALSE,
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
+#' @seealso \code{\link{Ttests.Anal}} for analytical function
 #' @export
 
 PlotTT<-function(dataSet, analSet, imgName="tt_", format="png", dpi=72, width=NA){
