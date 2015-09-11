@@ -74,6 +74,23 @@ MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
 
 
 #-------------------------------------------------------------------------
+# Read function's documentation for details
+
+# Filtering
+msdata <- PeakFilter(msdata, min.nonNApercent = 0.4)
+msdata <- BasicFilter(msdata, method = "iqr")
+
+# Missing values imputation
+msdata <- EvalMissVal(msdata, method = "ppca")
+
+# Normalisation
+msdata <- StandNorm(msdata, "standards_list.txt")
+msdata <- BiomassNorm(msdata, "biomass_list.txt")
+msdata <- DataNorm(msdata, method = "median")
+msdata <- DataTransform(msdata, method = "log2")
+msdata <- DataScaling(msdata, method = "pareto")
+
+#-------------------------------------------------------------------------
 
 # Choose one of
 # # 1) if you have a single table like the one generated at the previous step
@@ -120,6 +137,8 @@ analSet <- PCA.Anal(dataSet, analSet)
 analSet <- PCA.Loadings(dataSet, analSet)
 analSet <- PLS.Anal(dataSet, analSet)
 analSet <- PLS.Loadings(dataSet, analSet)
+analSet <- PLSDA.CV(dataSet, analSet)
+analSet <- PLSDA.Permut(dataSet, analSet)
 analSet <- Kmeans.Anal(dataSet, analSet)
 analSet <- SOM.Anal(dataSet, analSet)
 analSet <- RF.Anal(dataSet, analSet)
