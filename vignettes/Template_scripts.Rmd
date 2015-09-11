@@ -18,24 +18,32 @@ Below you see the R code script which you can easily copy-paste and vary accordi
 #-------------------------------------------------------------------------
 
 # If you have QI output which is needed to be converted
-# use MQI_to_MA for metabolites or lipids
+# use MQI_to_MA for metabolites or lipids.
+# Set path to a directory or a single .csv file
 MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
-          abundance = "Normalised", 
+          abundance = "Raw", 
+          compoundID = "Accepted Compound ID", 
           facNames = NULL, 
           unite_neg_pos = TRUE)
 
 # OR you can change arguments
-# 1) if you want raw data:
-# # abundance = "Raw"
+# 1) if you want normalised data:
+# # abundance = "Normalised"
 
-# 2) if you don't want to merge pos and neg files:
-# # unite_neg_pos = FALSE 
+# 2) if you want to get compoundID from "Compound" or "Formula" column 
+# # compoundID = "Compound"
+# # OR
+# # compoundID = "Formula" 
 
 # 3) if you would like to specify names of grouping factors (choose your own!):
 # # facNames = c("Species", "Phenotype", "Treatment") 
 
+# 4) if you don't want to merge pos and neg files:
+# # unite_neg_pos = FALSE 
+
 MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
-          abundance = "Raw", 
+          abundance = "Raw",
+          compoundID = "Compound",
           facNames = c("Species", "Phenotype", "Treatment"), 
           unite_neg_pos = FALSE)
 
@@ -43,28 +51,29 @@ MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
 
 # If you have QI output which is needed to be converted
 # use PQI_to_MA for proteins
+# Set path to a directory or a single .csv file
 PQI_to_MA(directory = getwd(),
-          abundance = "Normalised",
+          abundance = "Raw",
           facNames  = NULL,
-          proteinID = "shortDescription")
+          compoundID = "shortDescription")
 
 # OR you can change arguments
 # 1) if you want raw data:
 # # abundance = "Raw"
 
-# 2) if you want tp get proteinID from "Acession" column 
-# #   or from "Description" column without cutting the end of ID 
-# # proteinID = "Accession"
+# 2) if you want to get compoundID from "Accession" column 
+# #  or from "Description" column without cutting the end of ID 
+# # compoundID = "Accession"
 # # OR
-# # proteinID = "Description" 
+# # compoundID = "Description" 
  
 # 3) if you would like to specify names of grouping factors (choose your own!):
 # # facNames = c("Species", "Phenotype", "Treatment") 
 
-MQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
-          abundance = "Raw", 
+PQI_to_MA(directory = "/path_to_your_directory_with_QI_output_csv_files/",
+          abundance = "Normalised", 
           facNames = c("Species", "Phenotype", "Treatment"),
-          proteinID = "Accession")
+          compoundID = "Accession")
           
           
 #-------------------------------------------------------------------------
