@@ -27,9 +27,9 @@ SetColor <- function(dataSet, colVec, msdata, fac) {
     }
     
     levels(fac) <- colVec
-    dataSet$colVec <- fac
+    dataSet$colVec <- as.character(fac)
     levels(fac) <- grDevices::colorRampPalette(c("grey90", "grey30"))(grp.num)
-    dataSet$greyVec <- fac
+    dataSet$greyVec <- as.character(fac)
     return(dataSet)
 }
 
@@ -58,7 +58,7 @@ SetShape <- function(dataSet, shapeVec, msdata, fac) {
     }
     
     levels(fac) <- shapeVec
-    dataSet$shapeVec <- fac
+    dataSet$shapeVec <- as.integer(as.character(fac))
     return(dataSet)
 }
 
