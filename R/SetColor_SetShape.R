@@ -78,4 +78,8 @@ GetColorSchema <- function(dataSet, gray.scale = FALSE){
         colVec <- dataSet$colVec
     }
     return (colVec);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> cca2144898007190f8b08cf68c0863c80835f81b
