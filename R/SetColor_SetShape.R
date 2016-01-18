@@ -62,8 +62,8 @@ SetShape <- function(dataSet, shapeVec, msdata, fac) {
     return(dataSet)
 }
 
-GetShapeSchema <- function(dataSet, gray.scale){
-    if (gray.scale) {
+GetShapeSchema <- function(dataSet, show, gray.scale){
+    if (gray.scale && show) {
         shapeVec <- rep(19, length(dataSet$cls))
     } else {
         shapeVec <- dataSet$shapeVec;
@@ -71,8 +71,8 @@ GetShapeSchema <- function(dataSet, gray.scale){
     return(shapeVec);
 }
 
-GetColorSchema <- function(dataSet, show, gray.scale = FALSE){
-    if (gray.scale && show){
+GetColorSchema <- function(dataSet, gray.scale = FALSE){
+    if (gray.scale){
         colVec <- dataSet$grayVec
     } else {
         colVec <- dataSet$colVec
