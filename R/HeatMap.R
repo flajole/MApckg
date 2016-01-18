@@ -230,7 +230,8 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
 #' @seealso \code{\link[pheatmap]{pheatmap}} for used statistical function\cr
 #' \code{\link{PlotSubHeatMap}} for one-factored data
 #' @export
-PlotHeatMap2<-function(dataSet, analSet, imgName="heatmap2_", format="png", dpi=72, width=NA, smplDist='pearson', clstDist='average', colors="bwm", viewOpt="overview", hiRes=FALSE, sortInx = 2, var.inx=1:ncol(dataSet$norm)){
+
+PlotHeatMap2<-function(dataSet, analSet, imgName="heatmap2_", format="png", dpi=72, width=NA, smplDist='euclidean', clstDist='average', colors="default", viewOpt="overview", hiRes=FALSE, sortInx = "B", var.inx=1:ncol(dataSet$norm)){
 	match.arg(colors, c("gbr", "heat", "topo", "gray", "default"))
 	match.arg(smplDist, c("pearson", "euclidean", "minkowski"))
 	match.arg(clstDist, c("ward.D", "ward.D2", "single", "complete", "average"))
