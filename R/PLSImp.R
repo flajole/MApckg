@@ -14,7 +14,7 @@
 #' @param type Importance measure. \code{"vip"} - for variable importance in projection (VIP); \code{"coef"} - for weighted sum of absolute regression coefficients.
 #' @param feat.nm ??????????????????????????????????????
 #' @param feat.num The number of top features to plot.
-#' @param color.BW If \code{TRUE}, grey scale is used.
+#' @param color.BW If \code{TRUE}, gray scale is used.
 #' @seealso \code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
 #' @export
 # BHan: added bgcolor parameter for B/W color

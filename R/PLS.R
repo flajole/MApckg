@@ -99,11 +99,11 @@ PlotPLSPairSummary<-function(dataSet, analSet, imgName="pls_pair_", format="png"
 #' @param inx1,inx2 The order numbers of PCs.
 #' @param reg Set the confidence level for plotting confidence region ellipse.
 #' @param show If \code{TRUE} then points at the plot are labeled.
-#' @param grey.scale If \code{TRUE} then plot is colored in 50 shades of gray.
+#' @param gray.scale If \code{TRUE} then plot is colored in 50 shades of gray.
 #' @rdname PlotPLS
 #' @export
 # score plot
-PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, reg=0.95, show= TRUE, grey.scale=F){
+PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, reg=0.95, show= TRUE, gray.scale=F){
 
 	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal first.")
     
@@ -145,7 +145,7 @@ PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png",
      ylims<-c(yrg[1]-y.ext, yrg[2]+y.ext);
 
      ## cols = as.numeric(dataSet$cls)+1;
-     cols <- GetColorSchema(dataSet, grey.scale);
+     cols <- GetColorSchema(dataSet, gray.scale);
      uniq.cols <- unique(cols);
 
      plot(lv1, lv2, xlab=xlabel, xlim=xlims, ylim=ylims, ylab=ylabel, type='n', main="Scores Plot");
@@ -167,13 +167,13 @@ PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png",
         } else {
             polygon(pts.array[,,i], col=adjustcolor(uniq.cols, alpha.f=0.25), border=NA);
         }
-        if(grey.scale) {
+        if(gray.scale) {
             lines(pts.array[,,i], col=adjustcolor("black", alpha.f=0.5), lty=2);
         }
      }
 
-     pchs <- GetShapeSchema(dataSet, show, grey.scale);
-     if(grey.scale) {
+     pchs <- GetShapeSchema(dataSet, show, gray.scale);
+     if(gray.scale) {
         cols <- rep("black", length(cols));
      }
      if(show){ # display sample name set on
@@ -183,7 +183,7 @@ PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png",
         if (length(uniq.cols) == 1) {
             points(lv1, lv2, pch=pchs, col=cols, cex=1.0);
         } else {
-            if(grey.scale | (!is.null(dataSet$shapeVec) && all(dataSet$shapeVec>0))){
+            if(gray.scale | (!is.null(dataSet$shapeVec) && all(dataSet$shapeVec>0))){
                 points(lv1, lv2, pch=pchs, col=cols, cex=1.8);
             }else{
                 points(lv1, lv2, pch=21, bg=cols, cex=2);
@@ -192,7 +192,7 @@ PlotPLS2DScore<-function(dataSet, analSet, imgName="pls_score2d_", format="png",
      }
 
      uniq.pchs <- unique(pchs);
-     if(grey.scale) {
+     if(gray.scale) {
         uniq.cols <- "black";
      }
      legend("topright", legend = legend.nm, pch=uniq.pchs, col=uniq.cols);

@@ -157,11 +157,11 @@ PlotPCAScree<-function(dataSet, analSet, imgName="pca_scree_", format="png", dpi
 #' @param inx1,inx2 The order numbers of PCs.
 #' @param reg Set the confidence level for plotting confidence region ellipse.
 #' @param show If \code{TRUE} then points at the plot are labeled.
-#' @param grey.scale If \code{TRUE} then plot is colored in 50 shades of gray.
+#' @param gray.scale If \code{TRUE} then plot is colored in 50 shades of gray.
 #' @rdname PlotPCA
 #' @export
 # 2D score plot
-PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, reg = 0.95, show=TRUE, grey.scale = FALSE){
+PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png", dpi=72, width=NA, inx1 = 1, inx2 = 2, reg = 0.95, show=TRUE, gray.scale = FALSE){
 	if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
     
 	xlabel = paste("PC",inx1, "(", round(100*analSet$pca$variance[inx1],1), "%)");
@@ -203,7 +203,7 @@ PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png
         xlims<-c(xrg[1]-x.ext, xrg[2]+x.ext);
         ylims<-c(yrg[1]-y.ext, yrg[2]+y.ext);
 
-        cols <- GetColorSchema(dataSet, grey.scale);
+        cols <- GetColorSchema(dataSet, gray.scale);
         uniq.cols <- unique(cols);
 
         plot(pc1, pc2, xlab=xlabel, xlim=xlims, ylim=ylims, ylab=ylabel, type='n', main="Scores Plot",
@@ -226,13 +226,13 @@ PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png
             } else {
                 polygon(pts.array[,,i], col=adjustcolor(uniq.cols, alpha.f=0.25), border=NA);
             }
-            if(grey.scale) {
+            if(gray.scale) {
                 lines(pts.array[,,i], col=adjustcolor("black", alpha.f=0.5), lty=2);
             }
         }
 
-        pchs <- GetShapeSchema(dataSet, show, grey.scale);
-        if(grey.scale) {
+        pchs <- GetShapeSchema(dataSet, show, gray.scale);
+        if(gray.scale) {
             cols <- rep("black", length(cols));
         }
         if(show){
@@ -242,7 +242,7 @@ PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png
             if(length(uniq.cols) == 1){
                 points(pc1, pc2, pch=pchs, col=cols, cex=1.0);
             }else{
-                if(grey.scale | (!is.null(dataSet$shapeVec) && all(dataSet$shapeVec>0))){
+                if(gray.scale | (!is.null(dataSet$shapeVec) && all(dataSet$shapeVec>0))){
                     points(pc1, pc2, pch=pchs, col=cols, cex=1.8);
                 }else{
                     points(pc1, pc2, pch=21, bg=cols, cex=2);
@@ -250,7 +250,7 @@ PlotPCA2DScore <- function(dataSet, analSet, imgName="pca_score2d_", format="png
             }
         }
         uniq.pchs <- unique(pchs);
-        if(grey.scale) {
+        if(gray.scale) {
             uniq.cols <- "black";
         }
         legend("topright", legend = legend.nm, pch=uniq.pchs, col=uniq.cols);
