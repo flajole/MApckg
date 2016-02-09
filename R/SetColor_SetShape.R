@@ -8,7 +8,7 @@
 #' @seealso \code{\link[grDevices]{colors}}
 #' @export
 
-SetColor <- function(dataSet, colVec, msdata, fac) {
+SetColor <- function(dataSet, colVec=NULL, msdata, fac) {
     
     fac.match <- charmatch(fac, names(msdata@sampleData))
     if (is.na(fac.match))
@@ -49,7 +49,7 @@ SetColor <- function(dataSet, colVec, msdata, fac) {
 #' @seealso \code{\link[graphics]{points}}
 #' @export
 
-SetShape <- function(dataSet, shapeVec, msdata, fac) {
+SetShape <- function(dataSet, shapeVec=NULL, msdata, fac) {
     
     fac.match <- charmatch(fac, names(msdata@sampleData))
     if (is.na(fac.match))
