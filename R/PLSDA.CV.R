@@ -24,7 +24,6 @@ PLSDA.CV<-function(dataSet, analSet, methodName="CV", compNum=GetDefaultPLSCVCom
 	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal and PLS.Loadings first.")
     match.arg(methodName, c("LOOCV", "CV"))
 	match.arg(choice, c("Q2", "R2", "Accuracy"))
-	match.arg()
 	# get classification accuracy using caret
 
     cls<-as.numeric(dataSet$cls)-1;

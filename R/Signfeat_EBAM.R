@@ -4,7 +4,7 @@
 #'
 #' @return \code{EBAM.A0.Anal} - native \code{analSet} with one added \code{$ebam.a0} element containing 
 #' standard \code{\link[siggenes]{find.a0}} function output
-#' @describeIn EBAM.Anal
+#' @describeIn EBAM.Anal Find EBAM Fudge Factor.
 #' @export
 
 # deteriming a0, only applicable for z.ebam (default)

@@ -2,26 +2,29 @@ Package: MApckg
 Title: R package of MetaboAnalyst functions
 Description: Function from MetaboAnalyst adapted to use in R.
 Version: 0.1
-Suggests: knitr
+Suggests:
+    knitr
 VignetteBuilder: knitr
 URL: http://github.com/flajole/MApckg
 BugReports: http://github.com/flajole/MApckg/issues
 Authors@R: person("Dmitry", "Zubkov", email = "zubkov@mpimp-golm.de", role = c("aut", "cre"))
-Imports:   
-	png,
-	xtable,
-	caret, 	
-	ellipse, 	
-	RColorBrewer, 
-	Cairo, 
-	randomForest, 
-	e1071, 
-	grDevices,
-	grid,
-	som,
-	pheatmap, 
-	pls, 
-	siggenes,
-	genefilter
+Imports:
+    png,
+    xtable,
+    caret,
+    ellipse,
+    RColorBrewer,
+    Cairo,
+    randomForest,
+    e1071,
+    grDevices,
+    grid,
+    som,
+    pheatmap,
+    pls,
+    siggenes,
+    genefilter,
+    MSdata
 License: GPL-3
 LazyData: true
+RoxygenNote: 5.0.1

@@ -26,30 +26,31 @@
 ANOVA.Anal<-function(dataSet, analSet, nonpar= FALSE, thresh=0.05, post.hoc="fisher"){
 	# perform anova and only return p values and MSres (for Fisher's LSD)
 	match.arg(post.hoc, c("fisher", "tukey"))
-aof <- function(x, cls = dataSet$cls) {
-   aov(x ~ cls);
-}
+    aof <- function(x, cls = dataSet$cls) {
+        aov(x ~ cls);
+        }
 
-# perform Kruskal Wallis Test
-kwtest <- function(x, cls = dataSet$cls) {
-   kruskal.test(x ~ cls);
-}
+    # perform Kruskal Wallis Test
+    kwtest <- function(x, cls = dataSet$cls) {
+        kruskal.test(x ~ cls);
+    }
+    
+    FisherLSD<-function(aov.obj, thresh){
+        LSD.test(aov.obj,"cls", alpha=thresh)
+    }
+    
+    # return only the signicant comparison names
+    parseTukey <- function(tukey, cut.off){
+        inx <- tukey$cls[,"p adj"] <= cut.off;
+        paste(rownames(tukey$cls)[inx], collapse="; ");
+    }
+    
+    # return only the signicant comparison names
+    parseFisher <- function(fisher, cut.off){
+        inx <- fisher[,"pvalue"] <= cut.off;
+        paste(rownames(fisher)[inx], collapse="; ");
+    }
 
-FisherLSD<-function(aov.obj, thresh){
-    LSD.test(aov.obj,"cls", alpha=thresh)
-}
-
-# return only the signicant comparison names
-parseTukey <- function(tukey, cut.off){
-	inx <- tukey$cls[,"p adj"] <= cut.off;
-	paste(rownames(tukey$cls)[inx], collapse="; ");
-}
-
-# return only the signicant comparison names
-parseFisher <- function(fisher, cut.off){
-	inx <- fisher[,"pvalue"] <= cut.off;
-	paste(rownames(fisher)[inx], collapse="; ");
-}
     if(nonpar){
         aov.nm <- "Kruskal Wallis Test";
         anova.res<-apply(as.matrix(dataSet$norm), 2, kwtest);
@@ -64,7 +65,7 @@ parseFisher <- function(fisher, cut.off){
             cutpt <- round(0.2*length(p.value));
             cutpt <- ifelse(cutpt>50, 50, cutpt);
             inx <- which(rank(p.value) == cutpt);
-            thresh <- p.value[inx]; 
+            thresh <- p.value[inx];
             inx.imp <- p.value <= thresh;
         }
         sig.p <- p.value[inx.imp];
@@ -132,7 +133,8 @@ parseFisher <- function(fisher, cut.off){
 
         fileName <- "anova_posthoc.csv";
         write.csv(sig.mat,file=fileName);
-     }
+    }
+    
      aov<-list (
         aov.nm = aov.nm,
         raw.thresh = thresh,

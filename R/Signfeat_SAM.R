@@ -55,7 +55,7 @@ SAM.Anal<-function(dataSet, analSet, method="d.stat", paired=FALSE, var.equal=TR
 #' @export
 SetSAMSigMat<-function(dataSet, analSet, delta=1.3){
 		if (is.null(analSet$sam)) stop("Please, conduct SAM.Anal first.")
-        sam.sum<-summary(analSet$sam, delta);
+        sam.sum<-siggenes::summary(analSet$sam, delta);
         summary.mat<-sam.sum@mat.sig;
 
         sig.mat <-as.matrix(signif(summary.mat[,-c(1,6)],5));
@@ -136,7 +136,7 @@ PlotSAM.Cmpd<-function(dataSet, analSet, imgName="sam_imp_", format="png", dpi=7
     h <- w;
 
     Cairo::Cairo(file = imgName, unit="in", dpi=dpi, width=w, height=h, type=format, bg="white");
-	plot(analSet$sam, analSet$sam.delta);
+	siggenes::plot(analSet$sam, analSet$sam.delta);
     dev.off();
 	frame()
 	grid::grid.raster(png::readPNG(imgName));

@@ -12,13 +12,14 @@
 #' @param dpi Image resolution.
 #' @param width Image width.
 #' @param type Importance measure. \code{"vip"} - for variable importance in projection (VIP); \code{"coef"} - for weighted sum of absolute regression coefficients.
-#' @param feat.nm ??????????????????????????????????????
+#' @param feat.nm The number of component used for VIP calculation. 
 #' @param feat.num The number of top features to plot.
 #' @param color.BW If \code{TRUE}, gray scale is used.
 #' @seealso \code{\link{PLS.Anal}}, \code{\link{PLS.Loadings}}, \code{\link{PLSDA.CV}}, \code{\link{PLSDA.Permut}}, \code{\link{PlotPLS}}
 #' @export
 # BHan: added bgcolor parameter for B/W color
-PlotPLS.Imp<-function(dataSet, analSet, imgName="pls_imp_", format="png", dpi=72, width=NA, type="vip", feat.nm, feat.num=15, color.BW=FALSE){
+
+PlotPLS.Imp<-function(dataSet, analSet, imgName="pls_imp_", format="png", dpi=72, width=NA, type="vip", feat.nm = 1, feat.num=15, color.BW=FALSE){
 	if (is.null(analSet$plsr)) stop("Please, conduct PLS.Anal and PLSDA.CV first.")
 	if (is.null(analSet$plsda)) stop("Please, conduct PLSDA.CV first.")
     match.arg(type, c("vip","coef"))

@@ -76,7 +76,8 @@ PlotSubHeatMap <- function(dataSet, analSet, imgName="heatmap_", format="png", d
                 analSet <- PLS.Anal(dataSet, analSet);
                 analSet <- PLSDA.CV(dataSet, analSet);
             }
-            var.nms <- rownames(analSet$plsda$vip.mat)[1:top.num];
+            
+            var.nms <- names(sort(analSet$plsda$vip.mat[ , 1], decreasing = T))[1:top.num];
         }else if(method.nm == 'rf'){
             if(is.null(analSet$rf)){
                 analSet <- RF.Anal(dataSet, analSet);
@@ -87,6 +88,7 @@ PlotSubHeatMap <- function(dataSet, analSet, imgName="heatmap_", format="png", d
     var.inx <- match(var.nms, colnames(dataSet$norm));
     analSet <- PlotHeatMap(dataSet, analSet, imgName, format, dpi, width, smplDist, clstDist, colors, viewOpt, rowV, colV, var.inx, border);
 	frame()
+    imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
 	grid::grid.raster(png::readPNG(imgName));
 	invisible(analSet)
 }
@@ -97,7 +99,7 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
     # record the paramters
     analSet$htmap<-list(dist.par=smplDist, clust.par=clstDist);
     # set up data set
-    if(is.na(var.inx)){
+    if(identical(var.inx, NA)){
         hc.dat<-as.matrix(dataSet$norm);
     }else{
         hc.dat<-as.matrix(dataSet$norm[,var.inx]);
@@ -107,15 +109,15 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
 
     # set up colors for heatmap
     if(colors=="gbr"){
-        colors <- grDevices::colorRampPalette(c("green", "black", "red"), space="rgb")(256);
+        color <- grDevices::colorRampPalette(c("green", "black", "red"), space="rgb")(256);
     }else if(colors == "heat"){
-        colors <- grDevices::heat.colors(256);
+        color <- grDevices::heat.colors(256);
     }else if(colors == "topo"){
-        colors <- grDevices::topo.colors(256);
+        color <- grDevices::topo.colors(256);
     }else if(colors == "gray"){
-        colors <- grDevices::colorRampPalette(c("grey90", "grey10"), space="rgb")(256);
+        color <- grDevices::colorRampPalette(c("grey90", "grey10"), space="rgb")(256);
     }else{
-        colors <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, "RdBu"))(256));
+        color <- rev(grDevices::colorRampPalette(RColorBrewer::brewer.pal(10, "RdBu"))(256));
     }
 
     imgName = paste(imgName, "dpi", dpi, ".", format, sep="");
@@ -188,7 +190,7 @@ PlotHeatMap<-function(dataSet, analSet, imgName="heatmap_", format="png", dpi=72
             cluster_rows = colV, 
             cluster_cols = rowV,
             scale = 'row', 
-            color = colors,
+            color = color,
             annotation_colors = ann_colors
             );
     }#else{

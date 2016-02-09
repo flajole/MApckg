@@ -83,6 +83,7 @@ NULL
 #' \code{PlotPCAPairSummary} - plot summary.
 #' @param pc.num The number of plotted principal components.
 #' @rdname PlotPCA
+#' @export
 # format: png, tiff, pdf, ps, svg
 PlotPCAPairSummary<-function(dataSet, analSet, imgName="pca_pair_", format="png", dpi=72, width=NA, pc.num=2){
 	if (is.null(analSet$pca)) stop("Please, conduct PCA.Anal first.")
@@ -369,4 +370,3 @@ GetPCALoadMat <- function(analSet){
 GetMaxPCAComp<-function(dataSet){
     return (min(9, dim(dataSet$norm)[1]-1, dim(dataSet$norm)[2]));
 }
-

@@ -183,6 +183,7 @@ FeatureCorrelation<-function(dataSet, analSet, dist.name="pearson", varName){
 #' in a time-series data with four time points (or four groups). 
 #' The order of the groups is given as the first item in the predefined patterns.
 #' @rdname PatternHunter
+#' @seealso \code{\link{PlotCorr}}, \code{\link{PlotCorrHeatMat}}
 #' @export
 Match.Pattern<-function(dataSet, analSet, dist.name="pearson", pattern=NULL){
     match.arg(dist.name,  c("pearson", "kendall", "spearman"))
@@ -271,7 +272,7 @@ GenerateTemplates <- function(dataSet){
 #' @param format Image format, one of: "png", "tiff", "pdf", "ps", "svg"
 #' @param dpi Image resolution.
 #' @param width Image width.
-#' @seealso \code{\link{PattetnHunter}}, \code{\link{PlotCorrHeatMat}}
+#' @seealso \code{\link{PatternHunter}}, \code{\link{PlotCorrHeatMat}}
 #' @export
 
 PlotCorr <- function(dataSet, analSet, imgName="ptn_", format="png", dpi=72, width=NA){

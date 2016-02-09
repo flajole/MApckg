@@ -9,7 +9,7 @@
 #' @seealso \code{\link{PlotKmeans}} for plotting functions
 #' @export
 # functions for k-means analysis
-Kmeans.Anal<-function(dataSet, analSet, clust.num){
+Kmeans.Anal<-function(dataSet, analSet, clust.num = 3){
 	analSet$kmeans<-kmeans (dataSet$norm, clust.num, nstart=100);
 	return(analSet);
 }
