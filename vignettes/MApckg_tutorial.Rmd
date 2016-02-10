@@ -48,6 +48,7 @@ biocLite(c( "netcdf", "imagemagick", "graphviz", "Rserve", "ellipse",
             "preprocessCore", "genefilter", "pheatmap", "igraph", "RJSONIO", 
             "SSPA", "caTools", "ROCR", "pROC", "devtools", "abind",
             "vsn", ask = FALSE))
+devtools::install_version("pbkrtest", version="0.4-5")
 ```
 * Install two of my packages:
 ```r
